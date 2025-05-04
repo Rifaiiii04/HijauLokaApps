@@ -2,19 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:hijauloka/config/theme.dart';
 
 class AppHeader extends StatelessWidget implements PreferredSizeWidget {
-  final VoidCallback? onLoginPressed;
   final String? title;
   final bool centerTitle;
   final List<Widget>? actions;
-  final bool showLoginButton;
+  final bool showActionButtons;
   
   const AppHeader({
     super.key,
-    this.onLoginPressed,
     this.title,
     this.centerTitle = false,
     this.actions,
-    this.showLoginButton = true,
+    this.showActionButtons = true,
   });
 
   @override
@@ -39,18 +37,27 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
         ),
       ) : null,
       centerTitle: centerTitle,
-      actions: actions ?? (showLoginButton ? [
-        TextButton(
-          onPressed: onLoginPressed ?? () {
-            Navigator.pushNamed(context, '/login');
+      actions: actions ?? (showActionButtons ? [
+        // Wishlist button
+        IconButton(
+          icon: const Icon(Icons.favorite_border, color: Colors.black54),
+          onPressed: () {
+            Navigator.pushNamed(context, '/wishlist');
           },
-          child: const Text(
-            'Masuk',
-            style: TextStyle(
-              color: AppTheme.primaryColor,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+        ),
+        // Notification button
+        IconButton(
+          icon: const Icon(Icons.notifications_none, color: Colors.black54),
+          onPressed: () {
+            Navigator.pushNamed(context, '/notifications');
+          },
+        ),
+        // Cart button
+        IconButton(
+          icon: const Icon(Icons.shopping_cart_outlined, color: Colors.black54),
+          onPressed: () {
+            Navigator.pushNamed(context, '/cart');
+          },
         ),
       ] : null),
     );
