@@ -14,10 +14,11 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _authService = AuthService();
-  
+
   bool _isLoading = false;
   bool _rememberMe = false;
   String? _errorMessage;
+  bool _snackbarShown = false;
 
   @override
   void dispose() {
@@ -45,14 +46,11 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
 
       if (result['success'] == true) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Login successful'),
-            backgroundColor: AppTheme.primaryColor,
-          ),
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          '/',
+          (route) => false,
+          arguments: {'showLoginSuccess': true},
         );
-        // Navigate to home screen and clear the stack
-        Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
       } else {
         setState(() {
           _errorMessage = result['message'] ?? 'Login failed';
@@ -71,6 +69,21 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+
+    if (args != null && args['showLoginSuccess'] == true && !_snackbarShown) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Login successful'),
+            backgroundColor: AppTheme.primaryColor,
+          ),
+        );
+      });
+      _snackbarShown = true; // Supaya tidak muncul dua kali
+    }
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -110,16 +123,17 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: Image.asset(
                             'assets/img/HijauLoklogo.png',
                             height: 60,
-                            errorBuilder: (context, error, stackTrace) => const Icon(
-                              Icons.eco,
-                              size: 60,
-                              color: AppTheme.primaryColor,
-                            ),
+                            errorBuilder:
+                                (context, error, stackTrace) => const Icon(
+                                  Icons.eco,
+                                  size: 60,
+                                  color: AppTheme.primaryColor,
+                                ),
                           ),
                         ),
                       ),
                       const SizedBox(height: 24),
-                      
+
                       // Welcome text
                       const Center(
                         child: Text(
@@ -131,7 +145,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       const SizedBox(height: 24),
-                      
+
                       // Error message
                       if (_errorMessage != null)
                         Padding(
@@ -142,7 +156,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             textAlign: TextAlign.center,
                           ),
                         ),
-                      
+
                       // Email field
                       TextFormField(
                         controller: _emailController,
@@ -157,14 +171,16 @@ class _LoginScreenState extends State<LoginScreen> {
                           if (value == null || value.isEmpty) {
                             return 'Please enter your email';
                           }
-                          if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                          if (!RegExp(
+                            r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                          ).hasMatch(value)) {
                             return 'Please enter a valid email';
                           }
                           return null;
                         },
                       ),
                       const SizedBox(height: 16),
-                      
+
                       // Password field
                       TextFormField(
                         controller: _passwordController,
@@ -183,7 +199,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         },
                       ),
                       const SizedBox(height: 16),
-                      
+
                       // Remember me and Forgot password
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -214,7 +230,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ],
                       ),
                       const SizedBox(height: 24),
-                      
+
                       // Sign In button
                       ElevatedButton(
                         onPressed: _isLoading ? null : _login,
@@ -225,25 +241,26 @@ class _LoginScreenState extends State<LoginScreen> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        child: _isLoading
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
+                        child:
+                            _isLoading
+                                ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                                : const Text(
+                                  'Sign In',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                              )
-                            : const Text(
-                                'Sign In',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
                       ),
                       const SizedBox(height: 16),
-                      
+
                       // Register link
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -251,7 +268,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           const Text("Don't have an account?"),
                           TextButton(
                             onPressed: () {
-                              Navigator.pushReplacementNamed(context, '/register');
+                              Navigator.pushReplacementNamed(
+                                context,
+                                '/register',
+                              );
                             },
                             child: const Text(
                               'Sign up',
@@ -260,11 +280,11 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ],
                       ),
-                      
+
                       const SizedBox(height: 16),
                       const Center(child: Text('or continue with')),
                       const SizedBox(height: 16),
-                      
+
                       // Social login buttons
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -278,7 +298,10 @@ class _LoginScreenState extends State<LoginScreen> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -286,10 +309,12 @@ class _LoginScreenState extends State<LoginScreen> {
                                 Image.asset(
                                   'assets/img/google.png',
                                   height: 24,
-                                  errorBuilder: (context, error, stackTrace) => const Icon(
-                                    Icons.g_mobiledata,
-                                    size: 24,
-                                  ),
+                                  errorBuilder:
+                                      (context, error, stackTrace) =>
+                                          const Icon(
+                                            Icons.g_mobiledata,
+                                            size: 24,
+                                          ),
                                 ),
                                 const SizedBox(width: 8),
                                 const Text('Google'),
@@ -297,7 +322,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                           const SizedBox(width: 16),
-                          
+
                           // Facebook button
                           OutlinedButton(
                             onPressed: () {
@@ -307,7 +332,10 @@ class _LoginScreenState extends State<LoginScreen> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -315,11 +343,13 @@ class _LoginScreenState extends State<LoginScreen> {
                                 Image.asset(
                                   'assets/img/facebook.png',
                                   height: 24,
-                                  errorBuilder: (context, error, stackTrace) => const Icon(
-                                    Icons.facebook,
-                                    size: 24,
-                                    color: Colors.blue,
-                                  ),
+                                  errorBuilder:
+                                      (context, error, stackTrace) =>
+                                          const Icon(
+                                            Icons.facebook,
+                                            size: 24,
+                                            color: Colors.blue,
+                                          ),
                                 ),
                                 const SizedBox(width: 8),
                                 const Text('Facebook'),

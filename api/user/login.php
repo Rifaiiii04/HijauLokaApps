@@ -50,6 +50,7 @@ if(!empty($data->email) && !empty($data->password)) {
         
         // Tell the user
         echo json_encode(array(
+            "success" => true,
             "message" => "Login successful.",
             "user" => $user_arr
         ));
@@ -58,13 +59,19 @@ if(!empty($data->email) && !empty($data->password)) {
         http_response_code(401);
         
         // Tell the user
-        echo json_encode(array("message" => "Login failed. Invalid email or password."));
+        echo json_encode(array(
+            "success" => false,
+            "message" => "Login failed. Invalid email or password."
+        ));
     }
 } else {
     // Response code
     http_response_code(400);
     
     // Tell the user
-    echo json_encode(array("message" => "Unable to login. Data is incomplete."));
+    echo json_encode(array(
+        "success" => false,
+        "message" => "Unable to login. Data is incomplete."
+    ));
 }
 ?>
