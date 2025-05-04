@@ -4,8 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hijauloka/models/user.dart';
 
 class AuthService {
-  // Change this to your actual API URL
-  final String baseUrl = 'http://10.0.2.2/hijauloka/api';
+  // Updated API URL to use your IP address
+  final String baseUrl = 'http://192.168.51.213/hijaulokapi/api';
   
   // For storing user data
   static const String userKey = 'user_data';
@@ -40,7 +40,7 @@ class AuthService {
     
     final data = jsonDecode(response.body);
     
-    if (response.statusCode == 200) {
+    if (response.statusCode == 200 && data['success'] == true) {
       // Save user data to shared preferences
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(userKey, jsonEncode(data['user']));
@@ -48,20 +48,26 @@ class AuthService {
     
     return data;
   }
-  
+
   // Check if user is logged in
   Future<bool> isLoggedIn() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.containsKey(userKey);
   }
-  
+
   // Get current user
   Future<User?> getCurrentUser() async {
     final prefs = await SharedPreferences.getInstance();
     final userData = prefs.getString(userKey);
     
     if (userData != null) {
-      return User.fromJson(jsonDecode(userData));
+      try {
+        return User.fromJson(jsonDecode(userData));
+      } catch (e) {
+        print('Error parsing user data: $e');
+        await prefs.remove(userKey);
+        return null;
+      }
     }
     
     return null;

@@ -1,47 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:hijauloka/config/theme.dart';
-import 'package:hijauloka/services/auth_service.dart';
 
-class AppHeader extends StatefulWidget implements PreferredSizeWidget {
+class AppHeader extends StatelessWidget implements PreferredSizeWidget {
+  final VoidCallback? onLoginPressed;
   final String? title;
   final bool centerTitle;
+  final List<Widget>? actions;
+  final bool showLoginButton;
   
   const AppHeader({
     super.key,
+    this.onLoginPressed,
     this.title,
     this.centerTitle = false,
+    this.actions,
+    this.showLoginButton = true,
   });
-
-  @override
-  State<AppHeader> createState() => _AppHeaderState();
-
-  @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
-}
-
-class _AppHeaderState extends State<AppHeader> {
-  bool _isLoggedIn = false;
-  final _authService = AuthService();
-
-  @override
-  void initState() {
-    super.initState();
-    _checkLoginStatus();
-  }
-
-  Future<void> _checkLoginStatus() async {
-    final isLoggedIn = await _authService.isLoggedIn();
-    setState(() {
-      _isLoggedIn = isLoggedIn;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
     return AppBar(
       backgroundColor: Colors.white,
       elevation: 0,
-      leading: widget.title == null ? Padding(
+      leading: title == null ? Padding(
         padding: const EdgeInsets.all(8.0),
         child: Image.asset('assets/img/HijauLoklogo.png', 
           errorBuilder: (context, error, stackTrace) => const Icon(
@@ -50,36 +31,17 @@ class _AppHeaderState extends State<AppHeader> {
           ),
         ),
       ) : null,
-      title: widget.title != null ? Text(
-        widget.title!,
+      title: title != null ? Text(
+        title!,
         style: const TextStyle(
           color: Colors.black,
           fontWeight: FontWeight.bold,
         ),
       ) : null,
-      centerTitle: widget.centerTitle,
-      actions: _isLoggedIn ? [
-        IconButton(
-          icon: const Icon(Icons.shopping_cart_outlined, color: Colors.black),
-          onPressed: () {
-            Navigator.pushNamed(context, '/cart');
-          },
-        ),
-        IconButton(
-          icon: const Icon(Icons.notifications_none_outlined, color: Colors.black),
-          onPressed: () {
-            Navigator.pushNamed(context, '/notifications');
-          },
-        ),
-        IconButton(
-          icon: const Icon(Icons.favorite_border, color: Colors.black),
-          onPressed: () {
-            Navigator.pushNamed(context, '/wishlist');
-          },
-        ),
-      ] : [
+      centerTitle: centerTitle,
+      actions: actions ?? (showLoginButton ? [
         TextButton(
-          onPressed: () {
+          onPressed: onLoginPressed ?? () {
             Navigator.pushNamed(context, '/login');
           },
           child: const Text(
@@ -90,7 +52,10 @@ class _AppHeaderState extends State<AppHeader> {
             ),
           ),
         ),
-      ],
+      ] : null),
     );
   }
+  
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }

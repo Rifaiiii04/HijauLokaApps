@@ -173,7 +173,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
-                  hintText: 'dea123@gmail.com',
+                  hintText: 'Email',
                   filled: true,
                   fillColor: Colors.grey[100],
                   border: OutlineInputBorder(
