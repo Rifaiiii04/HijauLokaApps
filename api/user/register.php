@@ -27,7 +27,7 @@ $user = new User($db);
 $data = json_decode(file_get_contents("php://input"));
 
 // Make sure data is not empty
-if(
+if (
     !empty($data->nama) &&
     !empty($data->email) &&
     !empty($data->password) &&
@@ -41,34 +41,45 @@ if(
     $user->alamat = $data->alamat;
     $user->no_tlp = $data->no_tlp;
 
-    // Check if email already exists
-    if($user->emailExists()) {
+    // Register user
+    if ($user->create()) {
+        // Response code
+        http_response_code(201);
+
+        // Create user array (optional, bisa dihilangkan jika tidak ingin mengirim data user)
+        $user_arr = array(
+            "id_user" => $user->id_user,
+            "nama" => $user->nama,
+            "email" => $user->email,
+            "alamat" => $user->alamat,
+            "no_tlp" => $user->no_tlp,
+            "profile_image" => $user->profile_image
+        );
+
+        // Tell the user
+        echo json_encode(array(
+            "success" => true,
+            "message" => "Registration successful.",
+            "user" => $user_arr
+        ));
+    } else {
         // Response code
         http_response_code(400);
-        
+
         // Tell the user
-        echo json_encode(array("message" => "Email already exists."));
-    } else {
-        // Create the user
-        if($user->create()) {
-            // Response code
-            http_response_code(201);
-            
-            // Tell the user
-            echo json_encode(array("message" => "User was created."));
-        } else {
-            // Response code
-            http_response_code(503);
-            
-            // Tell the user
-            echo json_encode(array("message" => "Unable to create user."));
-        }
+        echo json_encode(array(
+            "success" => false,
+            "message" => "Registration failed. Email may already be registered."
+        ));
     }
 } else {
     // Response code
     http_response_code(400);
-    
+
     // Tell the user
-    echo json_encode(array("message" => "Unable to create user. Data is incomplete."));
+    echo json_encode(array(
+        "success" => false,
+        "message" => "Unable to register. Data is incomplete."
+    ));
 }
 ?>
