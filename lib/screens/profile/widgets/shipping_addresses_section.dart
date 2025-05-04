@@ -3,8 +3,9 @@ import 'package:hijauloka/config/theme.dart';
 import 'package:hijauloka/models/shipping_address.dart';
 import 'package:hijauloka/screens/profile/widgets/address_card.dart';
 import 'package:hijauloka/screens/profile/address_form_screen.dart';
+import 'package:hijauloka/services/address_service.dart';
 
-class ShippingAddressesSection extends StatelessWidget {
+class ShippingAddressesSection extends StatefulWidget {
   final List<ShippingAddress> addresses;
   final Function(int) onAddressDeleted;
   final Function(int) onSetPrimary;
@@ -17,6 +18,50 @@ class ShippingAddressesSection extends StatelessWidget {
     required this.onSetPrimary,
     required this.onAddressAdded,
   });
+
+  @override
+  State<ShippingAddressesSection> createState() => _ShippingAddressesSectionState();
+}
+
+class _ShippingAddressesSectionState extends State<ShippingAddressesSection> {
+  late List<ShippingAddress> _addresses;
+  final AddressService _addressService = AddressService();
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _addresses = widget.addresses;
+  }
+
+  @override
+  void didUpdateWidget(ShippingAddressesSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.addresses != oldWidget.addresses) {
+      setState(() {
+        _addresses = widget.addresses;
+      });
+    }
+  }
+
+  Future<void> _refreshAddresses() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final addresses = await _addressService.getShippingAddresses();
+      setState(() {
+        _addresses = addresses;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error refreshing addresses: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,15 +97,21 @@ class ShippingAddressesSection extends StatelessWidget {
                   Icons.add,
                   color: AppTheme.primaryColor,
                 ),
-                onPressed: () {
-                  Navigator.push(
+                onPressed: () async {
+                  final result = await Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => AddressFormScreen(
-                        onAddressAdded: onAddressAdded,
+                        onAddressAdded: widget.onAddressAdded,
                       ),
                     ),
                   );
+                  
+                  if (result == true) {
+                    // Address was added, refresh the list
+                    _refreshAddresses();
+                    widget.onAddressAdded();
+                  }
                 },
                 constraints: const BoxConstraints(),
                 padding: EdgeInsets.zero,
@@ -68,7 +119,15 @@ class ShippingAddressesSection extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          if (addresses.isEmpty)
+          
+          if (_isLoading)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(16.0),
+                child: CircularProgressIndicator(),
+              ),
+            )
+          else if (_addresses.isEmpty)
             const Center(
               child: Text(
                 'No shipping addresses found',
@@ -76,16 +135,22 @@ class ShippingAddressesSection extends StatelessWidget {
               ),
             )
           else
-            ...addresses.map((address) => Column(
+            ...(_addresses.map((address) => Column(
               children: [
                 AddressCard(
                   address: address,
-                  onDelete: () => onAddressDeleted(address.id),
-                  onSetPrimary: () => onSetPrimary(address.id),
+                  onDelete: () async {
+                    await widget.onAddressDeleted(address.id);
+                    _refreshAddresses();
+                  },
+                  onSetPrimary: () async {
+                    await widget.onSetPrimary(address.id);
+                    _refreshAddresses();
+                  },
                 ),
                 const SizedBox(height: 12),
               ],
-            )).toList(),
+            )).toList()),
         ],
       ),
     );

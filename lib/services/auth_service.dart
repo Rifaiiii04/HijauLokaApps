@@ -9,44 +9,70 @@ class AuthService {
   
   // For storing user data
   static const String userKey = 'user_data';
+  static const String tokenKey = 'auth_token';
   
   // Register user
   Future<Map<String, dynamic>> register(String name, String email, String password, String address, String phone) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/user/register.php'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'nama': name,
-        'email': email,
-        'password': password,
-        'alamat': address,
-        'no_tlp': phone,
-      }),
-    );
-    
-    return jsonDecode(response.body);
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/user/register.php'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'nama': name,
+          'email': email,
+          'password': password,
+          'alamat': address,
+          'no_tlp': phone,
+        }),
+      );
+      
+      final data = jsonDecode(response.body);
+      
+      // If registration is successful, automatically log the user in
+      if (response.statusCode == 200 && data['success'] == true) {
+        await login(email, password);
+      }
+      
+      return data;
+    } catch (e) {
+      print('Registration error: $e');
+      return {'success': false, 'message': 'Network error: $e'};
+    }
   }
   
   // Login user
   Future<Map<String, dynamic>> login(String email, String password) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/user/login.php'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'email': email,
-        'password': password,
-      }),
-    );
-    
-    final data = jsonDecode(response.body);
-    
-    if (response.statusCode == 200 && data['success'] == true) {
-      // Save user data to shared preferences
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(userKey, jsonEncode(data['user']));
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/user/login.php'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'email': email,
+          'password': password,
+        }),
+      );
+      
+      final data = jsonDecode(response.body);
+      
+      if (response.statusCode == 200 && data['success'] == true) {
+        // Save user data to shared preferences
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(userKey, jsonEncode(data['user']));
+        
+        // Save token if provided
+        if (data['token'] != null) {
+          await prefs.setString(tokenKey, data['token']);
+        }
+        
+        // Save login timestamp
+        await prefs.setInt('last_login', DateTime.now().millisecondsSinceEpoch);
+      }
+      
+      return data;
+    } catch (e) {
+      print('Login error: $e');
+      return {'success': false, 'message': 'Network error: $e'};
     }
-    
-    return data;
   }
 
   // Check if user is logged in
@@ -77,5 +103,12 @@ class AuthService {
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(userKey);
+    await prefs.remove(tokenKey);
+  }
+  
+  // Get auth token
+  Future<String?> getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(tokenKey);
   }
 }

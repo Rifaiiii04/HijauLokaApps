@@ -6,7 +6,6 @@ import 'package:hijauloka/screens/profile/profile_screen.dart';
 import 'package:hijauloka/widgets/custom_bottom_nav.dart';
 import 'package:hijauloka/screens/auth/login_screen.dart';
 import 'package:hijauloka/screens/auth/register_screen.dart';
-// Remove imports for screens that don't exist yet
 
 void main() {
   runApp(const HijauLokaApp());
@@ -21,11 +20,11 @@ class HijauLokaApp extends StatelessWidget {
       title: 'HijauLoka',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: const MainScreen(),
+      initialRoute: '/',
       routes: {
+        '/': (context) => const MainScreen(initialIndex: 0), // Home screen as default
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
-        // Use placeholder screens for now
         '/cart': (context) => const PlaceholderScreen(title: 'Cart'),
         '/notifications': (context) => const PlaceholderScreen(title: 'Notifications'),
         '/wishlist': (context) => const PlaceholderScreen(title: 'Wishlist'),
@@ -34,7 +33,7 @@ class HijauLokaApp extends StatelessWidget {
   }
 }
 
-// Add a placeholder screen for routes that don't have dedicated screens yet
+// Placeholder screen for routes that don't have dedicated screens yet
 class PlaceholderScreen extends StatelessWidget {
   final String title;
   
@@ -45,6 +44,7 @@ class PlaceholderScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(title),
+        backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
       ),
@@ -103,20 +103,28 @@ class PlaceholderScreen extends StatelessWidget {
 }
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
+  final int initialIndex;
+  
+  const MainScreen({super.key, this.initialIndex = 0});
 
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
 
 class _MainScreenState extends State<MainScreen> {
-  int _selectedIndex = 0;
+  late int _selectedIndex;
   
   final List<Widget> _screens = [
     const HomeScreen(),
     const CategoryScreen(),
     const ProfileScreen(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.initialIndex;
+  }
 
   void _onItemTapped(int index) {
     setState(() {
