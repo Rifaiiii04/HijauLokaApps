@@ -36,7 +36,12 @@ $base_img_url = "http://192.168.51.213/hijauloka/uploads/";
 
 $featured_products = [];
 while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-    $row['gambar'] = $base_img_url . $row['gambar'];
+    // Ambil hanya satu nama file jika ada koma
+    $gambar = $row['gambar'];
+    if (strpos($gambar, ',') !== false) {
+        $gambar = explode(',', $gambar)[0];
+    }
+    $row['gambar'] = $base_img_url . trim($gambar);
     $featured_products[] = $row;
 }
 
