@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hijauloka/config/theme.dart';
 import 'package:hijauloka/screens/auth/register_screen.dart';
+import 'package:hijauloka/services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,12 +14,51 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _rememberMe = false;
+  bool _isLoading = false;
+  final _authService = AuthService();
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _login() async {
+    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill in all fields')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final response = await _authService.login(
+        _emailController.text,
+        _passwordController.text,
+      );
+
+      if (response['message'] == 'Login successful.') {
+        // Navigate to home screen and clear the stack
+        Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(response['message'])),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -175,22 +215,22 @@ class _LoginScreenState extends State<LoginScreen> {
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: () {
-                    // Handle login
-                  },
+                  onPressed: _isLoading ? null : _login,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primaryColor,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  child: const Text(
-                    'Sign In',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  child: _isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text(
+                          'Sign In',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
               ),
               const SizedBox(height: 24),
@@ -205,12 +245,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       color: Colors.black87,
                     ),
                   ),
-                  // Inside the LoginScreen class, update the GestureDetector for "Sign up"
                   GestureDetector(
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                        MaterialPageRoute(
+                          builder: (context) => const RegisterScreen(),
+                        ),
                       );
                     },
                     child: const Text(

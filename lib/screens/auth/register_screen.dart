@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hijauloka/config/theme.dart';
+import 'package:hijauloka/services/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -14,6 +15,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordController = TextEditingController();
   final _addressController = TextEditingController();
   final _phoneController = TextEditingController();
+  bool _isLoading = false;
+  final _authService = AuthService();
 
   @override
   void dispose() {
@@ -23,6 +26,55 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _addressController.dispose();
     _phoneController.dispose();
     super.dispose();
+  }
+
+  Future<void> _register() async {
+    if (_nameController.text.isEmpty ||
+        _emailController.text.isEmpty ||
+        _passwordController.text.isEmpty ||
+        _addressController.text.isEmpty ||
+        _phoneController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill in all fields')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final response = await _authService.register(
+        _nameController.text,
+        _emailController.text,
+        _passwordController.text,
+        _addressController.text,
+        _phoneController.text,
+      );
+
+      if (response['message'] == 'User was created.') {
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Registration successful! Please login.')),
+        );
+        
+        // Navigate back to login screen
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(response['message'])),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -245,22 +297,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: () {
-                    // Handle registration
-                  },
+                  onPressed: _isLoading ? null : _register,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primaryColor,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  child: const Text(
-                    'Register',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  child: _isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text(
+                          'Register',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
               ),
               const SizedBox(height: 24),
