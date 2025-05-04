@@ -1,6 +1,6 @@
 name: hijauloka
 description: "A new Flutter project."
-publish_to: 'none'
+publish_to: "none"
 version: 0.1.0
 
 environment:
@@ -16,6 +16,9 @@ dependencies:
   cached_network_image: ^3.2.3
   intl: ^0.18.1
   url_launcher: ^6.1.14
+  form_field_validator: ^1.1.0
+  google_sign_in: ^6.1.5
+  flutter_facebook_auth: ^6.0.4
 
 dev_dependencies:
   flutter_test:
@@ -24,7 +27,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-  
+
   assets:
     - assets/img/
     - assets/img/category-pots.png

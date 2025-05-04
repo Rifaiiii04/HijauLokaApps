@@ -21,7 +21,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final AuthService _authService = AuthService();
   final AddressService _addressService = AddressService();
-  
+
   User? _user;
   List<ShippingAddress> _addresses = [];
   bool _isLoading = true;
@@ -49,16 +49,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       // Check if user is logged in and get current user data from shared preferences
       final isLoggedIn = await _authService.isLoggedIn();
-      
+
       if (isLoggedIn) {
         final user = await _authService.getCurrentUser();
         List<ShippingAddress> addresses = [];
-        
+
         if (user != null) {
           // Fetch additional user data if needed
           // For example, you might want to refresh user data from the server
           // final refreshedUserData = await _authService.refreshUserData(user.id);
-          
+
           // Fetch user's shipping addresses
           addresses = await _addressService.getShippingAddresses();
           print("User logged in: ${user.name}"); // Debug print
@@ -67,7 +67,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           // This shouldn't happen, but if it does, clear the invalid session
           await _authService.logout();
         }
-        
+
         if (mounted) {
           setState(() {
             _user = user;
@@ -101,9 +101,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (_isLoading) {
       return Scaffold(
         appBar: const AppHeader(),
-        body: const Center(
-          child: CircularProgressIndicator(),
-        ),
+        body: const Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -130,15 +128,62 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
     }
 
-    // Create a default user if not logged in
-    final displayUser = _user ?? User(
-      id: 0,
-      name: 'Guest User',
-      email: 'guest@example.com',
-      phone: '-',
-      address: 'No address available',
-    );
+    // Jika user belum login, hanya tampil tombol Sign In dan Sign Up
+    if (_user == null) {
+      return Scaffold(
+        appBar: const AppHeader(),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/login');
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryColor,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 16,
+                    horizontal: 32,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text(
+                  'Sign In',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+              const SizedBox(height: 16),
+              OutlinedButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/register');
+                },
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppTheme.primaryColor,
+                  side: BorderSide(color: AppTheme.primaryColor),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 16,
+                    horizontal: 32,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text(
+                  'Sign Up',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
+    // Jika user sudah login, tampilkan data user seperti biasa
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: const AppHeader(),
@@ -149,39 +194,49 @@ class _ProfileScreenState extends State<ProfileScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // User Profile Card
-              ProfileCard(user: displayUser),
-              
+              ProfileCard(user: _user!),
+
               // Order Status
               const OrderStatusSection(),
-              
+
               // Main Address
-              MainAddressSection(user: displayUser),
-              
+              MainAddressSection(user: _user!),
+
               // Shipping Addresses
-              if (_user != null) ShippingAddressesSection(
+              ShippingAddressesSection(
                 addresses: _addresses,
                 onAddressDeleted: (int addressId) async {
                   try {
-                    final result = await _addressService.deleteShippingAddress(addressId);
+                    final result = await _addressService.deleteShippingAddress(
+                      addressId,
+                    );
                     if (result['success'] == true) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Address deleted successfully')),
+                        const SnackBar(
+                          content: Text('Address deleted successfully'),
+                        ),
                       );
                       _loadUserData();
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(result['message'] ?? 'Failed to delete address')),
+                        SnackBar(
+                          content: Text(
+                            result['message'] ?? 'Failed to delete address',
+                          ),
+                        ),
                       );
                     }
                   } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error: $e')),
-                    );
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text('Error: $e')));
                   }
                 },
                 onSetPrimary: (int addressId) async {
                   try {
-                    final result = await _addressService.setPrimaryAddress(addressId);
+                    final result = await _addressService.setPrimaryAddress(
+                      addressId,
+                    );
                     if (result['success'] == true) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Address set as primary')),
@@ -189,98 +244,113 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       _loadUserData();
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(result['message'] ?? 'Failed to set as primary')),
+                        SnackBar(
+                          content: Text(
+                            result['message'] ?? 'Failed to set as primary',
+                          ),
+                        ),
                       );
                     }
                   } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error: $e')),
-                    );
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text('Error: $e')));
                   }
                 },
                 onAddressAdded: _loadUserData,
               ),
-              
+
               // Order History
               const OrderHistorySection(),
-              
+
               // Login/Logout Button
               Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+                margin: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 24,
+                ),
                 width: double.infinity,
-                child: _user == null
-                    ? ElevatedButton(
-                        onPressed: () {
-                          Navigator.pushNamed(context, '/login');
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.primaryColor,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: const Text(
-                          'Login',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      )
-                    : ElevatedButton(
-                        onPressed: () async {
-                          final confirmed = await showDialog<bool>(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: const Text('Logout'),
-                              content: const Text('Are you sure you want to logout?'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context, false),
-                                  child: const Text('Cancel'),
-                                ),
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context, true),
-                                  child: const Text('Logout'),
-                                ),
-                              ],
+                child:
+                    _user == null
+                        ? ElevatedButton(
+                          onPressed: () {
+                            Navigator.pushNamed(context, '/login');
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.primaryColor,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
                             ),
-                          );
-                          
-                          if (confirmed == true) {
-                            await _authService.logout();
-                            if (!mounted) return;
-                            
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Logged out successfully')),
+                          ),
+                          child: const Text(
+                            'Login',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        )
+                        : ElevatedButton(
+                          onPressed: () async {
+                            final confirmed = await showDialog<bool>(
+                              context: context,
+                              builder:
+                                  (context) => AlertDialog(
+                                    title: const Text('Logout'),
+                                    content: const Text(
+                                      'Are you sure you want to logout?',
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed:
+                                            () => Navigator.pop(context, false),
+                                        child: const Text('Cancel'),
+                                      ),
+                                      TextButton(
+                                        onPressed:
+                                            () => Navigator.pop(context, true),
+                                        child: const Text('Logout'),
+                                      ),
+                                    ],
+                                  ),
                             );
-                            
-                            // Refresh the screen to show login button
-                            setState(() {
-                              _user = null;
-                            });
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+
+                            if (confirmed == true) {
+                              await _authService.logout();
+                              if (!mounted) return;
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Logged out successfully'),
+                                ),
+                              );
+
+                              // Refresh the screen to show login button
+                              setState(() {
+                                _user = null;
+                              });
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: const Text(
+                            'Logout',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
-                        child: const Text(
-                          'Logout',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
               ),
-              
+
               const SizedBox(height: 80), // Space for bottom navigation
             ],
           ),
