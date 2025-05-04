@@ -19,6 +19,7 @@ dependencies:
   form_field_validator: ^1.1.0
   google_sign_in: ^6.1.5
   flutter_facebook_auth: ^6.0.4
+  flutter_launcher_icons: ^0.14.3
 
 dev_dependencies:
   flutter_test:
@@ -34,3 +35,8 @@ flutter:
     - assets/img/plantcategory.png
     - assets/img/seedscategory.png
     - assets/img/HijauLoklogo.png
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/logoicon.png"
