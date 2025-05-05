@@ -206,16 +206,17 @@ class _CategoryScreenState extends State<CategoryScreen> {
     required double rating,
     required String imageUrl,
   }) {
+    // Base URL for images
+    const String baseImgUrl = "http://192.168.51.213/hijauloka/uploads/";
+
     // Clean and format the image URL
     String cleanImageUrl = imageUrl.trim();
-    if (cleanImageUrl.startsWith('/')) {
-      cleanImageUrl = cleanImageUrl.substring(1);
-    }
 
-    // Print the image URL for debugging
-    print(
-      'Loading image for $name: http://192.168.51.213/hijauloka/uploads/$cleanImageUrl',
-    );
+    // Remove any double slashes
+    cleanImageUrl = cleanImageUrl.replaceAll('//', '/');
+
+    final fullImageUrl = baseImgUrl + cleanImageUrl;
+    print('Loading image for $name: $fullImageUrl');
 
     return GestureDetector(
       onTap: () {},
@@ -246,7 +247,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
                       top: Radius.circular(15),
                     ),
                     child: Image.network(
-                      'http://192.168.51.213/hijauloka/uploads/$cleanImageUrl',
+                      fullImageUrl,
                       height: 110,
                       width: double.infinity,
                       fit: BoxFit.cover,
@@ -268,10 +269,10 @@ class _CategoryScreenState extends State<CategoryScreen> {
                         );
                       },
                       errorBuilder: (context, error, stackTrace) {
-                        print('Image Error for $name: $error');
-                        print(
-                          'Image URL: http://192.168.51.213/hijauloka/uploads/$cleanImageUrl',
-                        );
+                        print('Image Error for $name:');
+                        print('Error: $error');
+                        print('Stack trace: $stackTrace');
+                        print('Attempted URL: $fullImageUrl');
                         return Container(
                           height: 110,
                           width: double.infinity,
@@ -299,144 +300,66 @@ class _CategoryScreenState extends State<CategoryScreen> {
                     ),
                   ),
                 ),
-                // Category label
-                if (category.isNotEmpty && category != 'Uncategorized')
-                  Positioned(
-                    top: 8,
-                    left: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppTheme.primaryColor.withOpacity(0.9),
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Text(
-                        category,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
+                Positioned(
+                  top: 8,
+                  left: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryColor.withOpacity(0.9),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      category,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
+                ),
               ],
             ),
-            // Product details
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Product name
-                    Text(
-                      name,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
+            // Content section
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(Icons.star, size: 16, color: Colors.amber[700]),
+                      const SizedBox(width: 4),
+                      Text(
+                        rating.toStringAsFixed(1),
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    price,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.primaryColor,
                     ),
-                    const SizedBox(height: 2),
-                    // Star rating
-                    Row(
-                      children: [
-                        ...List.generate(
-                          5,
-                          (index) => Icon(
-                            Icons.star,
-                            color:
-                                index < rating.floor()
-                                    ? Colors.amber
-                                    : Colors.amber.withOpacity(0.3),
-                            size: 12,
-                          ),
-                        ),
-                        const SizedBox(width: 2),
-                        Text(
-                          '(${rating.toStringAsFixed(1)})',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 9,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    // Price
-                    Text(
-                      price,
-                      style: const TextStyle(
-                        color: AppTheme.primaryColor,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                      ),
-                    ),
-                    const Spacer(),
-                    // Action buttons
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // Favorite button
-                        Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[100],
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(
-                            Icons.favorite_border,
-                            color: Colors.grey,
-                            size: 16,
-                          ),
-                        ),
-                        // Add to cart button
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppTheme.primaryColor,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.shopping_cart_outlined,
-                                color: Colors.white,
-                                size: 14,
-                              ),
-                              SizedBox(width: 4),
-                              Text(
-                                'Beli',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 11,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ],

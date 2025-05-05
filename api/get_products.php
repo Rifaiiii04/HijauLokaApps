@@ -47,12 +47,27 @@ try {
     error_log("Number of products fetched: " . count($products));
     error_log("Raw product data: " . print_r($products, true));
     
+    // Base URL for images
+    $base_img_url = "http://192.168.51.213/hijauloka/uploads/";
+    
     // Format the response
     $response = array(
         'status' => 'success',
-        'data' => array_map(function($product) {
-            // Debug: Print image path
-            error_log("Product: {$product['nama_product']}, Image: {$product['gambar']}, Category: {$product['nama_kategori']}");
+        'data' => array_map(function($product) use ($base_img_url) {
+            // Handle multiple images - take only the first one
+            $gambar = $product['gambar'];
+            if (strpos($gambar, ',') !== false) {
+                $gambar = explode(',', $gambar)[0];
+            }
+            
+            // Clean the image path
+            $gambar = trim($gambar);
+            
+            // Debug: Print detailed image information
+            error_log("Product: {$product['nama_product']}");
+            error_log("Original image path: {$product['gambar']}");
+            error_log("Cleaned image path: $gambar");
+            error_log("Full URL would be: $base_img_url$gambar");
             
             return array(
                 'id' => $product['id_product'],
@@ -60,7 +75,7 @@ try {
                 'description' => $product['desk_product'],
                 'price' => number_format($product['harga'], 0, ',', '.'),
                 'stock' => $product['stok'],
-                'image' => $product['gambar'],
+                'image' => $gambar,
                 'rating' => floatval($product['rating']),
                 'category' => $product['nama_kategori'] ?? 'Uncategorized',
                 'category_id' => $product['id_kategori']
