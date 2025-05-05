@@ -50,12 +50,12 @@ class ProductCard extends StatelessWidget {
                     borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
                     child: Image.network(
                       imageUrl,
-                      height: 130,
+                      height: 120, // Reduced from 130 to 120
                       width: double.infinity,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
-                          height: 130,
+                          height: 120, // Reduced from 130 to 120
                           width: double.infinity,
                           color: Colors.grey[200],
                           child: const Icon(
@@ -100,7 +100,7 @@ class ProductCard extends StatelessWidget {
             ),
             // Product details
             Padding(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(8), // Reduced from 10 to 8
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -109,12 +109,12 @@ class ProductCard extends StatelessWidget {
                     name,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: 14,
+                      fontSize: 13, // Reduced from 14 to 13
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 2), // Reduced from 4 to 2
                   // Star rating
                   Row(
                     children: [
@@ -125,30 +125,31 @@ class ProductCard extends StatelessWidget {
                           color: index < rating.floor() 
                               ? Colors.amber 
                               : Colors.amber.withOpacity(0.3),
-                          size: 14,
+                          size: 12, // Reduced from 14 to 12
                         ),
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: 2), // Reduced from 4 to 2
                       Text(
                         '(${rating.toStringAsFixed(1)})',
                         style: TextStyle(
                           color: Colors.grey[600],
-                          fontSize: 10,
+                          fontSize: 9, // Reduced from 10 to 9
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 2), // Reduced from 4 to 2
                   // Price
                   Text(
                     price,
                     style: const TextStyle(
                       color: AppTheme.primaryColor,
                       fontWeight: FontWeight.bold,
-                      fontSize: 14,
+                      fontSize: 13, // Reduced from 14 to 13
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6), // Reduced from 8 to 6
+                  const SizedBox(height: 4),
                   // Action buttons
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
