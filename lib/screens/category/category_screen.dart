@@ -3,6 +3,7 @@ import 'package:hijauloka/config/theme.dart';
 import 'package:hijauloka/widgets/app_header.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:hijauloka/widgets/product_card.dart';
 
 class CategoryScreen extends StatefulWidget {
   const CategoryScreen({super.key});
@@ -25,9 +26,14 @@ class _CategoryScreenState extends State<CategoryScreen> {
 
   Future<void> fetchProducts() async {
     try {
+      setState(() {
+        isLoading = true;
+        errorMessage = '';
+      });
+
       print('Fetching products...');
       final response = await http.get(
-        Uri.parse('http://192.168.51.213/hijaulokapi/api/get_products.php'),
+        Uri.parse('http://192.168.50.213/hijauloka/api/get_products.php'),
       );
 
       print('Response status code: ${response.statusCode}');
@@ -74,128 +80,141 @@ class _CategoryScreenState extends State<CategoryScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: const AppHeader(),
-      body: Column(
-        children: [
-          // Header section
-          Container(
-            padding: const EdgeInsets.all(20),
-            color: Colors.white,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Katalog Tanaman',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.primaryColor,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Temukan berbagai koleksi tanaman hias\npilihan untuk rumah Anda',
-                  style: TextStyle(fontSize: 14, color: Colors.grey),
-                ),
-                const SizedBox(height: 15),
-                // Search bar
-                Row(
+      body:
+          isLoading
+              ? const Center(
+                child: CircularProgressIndicator(color: AppTheme.primaryColor),
+              )
+              : errorMessage.isNotEmpty
+              ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Expanded(
-                      child: Container(
-                        height: 45,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[200],
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: TextField(
-                          decoration: InputDecoration(
-                            hintText: 'Cari tanaman...',
-                            prefixIcon: const Icon(
-                              Icons.search,
-                              color: Colors.grey,
-                            ),
-                            border: InputBorder.none,
-                            contentPadding: const EdgeInsets.symmetric(
-                              vertical: 12,
-                            ),
-                            hintStyle: TextStyle(color: Colors.grey[500]),
-                          ),
-                        ),
-                      ),
+                    Text(
+                      errorMessage,
+                      style: const TextStyle(color: Colors.red),
+                      textAlign: TextAlign.center,
                     ),
-                    const SizedBox(width: 10),
-                    GestureDetector(
-                      onTap: () {
-                        _showFilterDrawer(context);
-                      },
-                      child: Container(
-                        height: 45,
-                        width: 45,
-                        decoration: BoxDecoration(
-                          color: AppTheme.primaryColor,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(
-                          Icons.filter_list,
-                          color: Colors.white,
-                        ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: fetchProducts,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primaryColor,
                       ),
+                      child: const Text('Retry'),
                     ),
                   ],
                 ),
-              ],
-            ),
-          ),
-
-          // Product grid
-          Expanded(
-            child:
-                isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : errorMessage.isNotEmpty
-                    ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            errorMessage,
-                            style: const TextStyle(color: Colors.red),
+              )
+              : Column(
+                children: [
+                  // Header section
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    color: Colors.white,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Katalog Tanaman',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.primaryColor,
                           ),
-                          const SizedBox(height: 10),
-                          ElevatedButton(
-                            onPressed: fetchProducts,
-                            child: const Text('Retry'),
-                          ),
-                        ],
-                      ),
-                    )
-                    : RefreshIndicator(
-                      onRefresh: fetchProducts,
-                      child: GridView.builder(
-                        padding: const EdgeInsets.all(15),
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              childAspectRatio: 0.7,
-                              crossAxisSpacing: 15,
-                              mainAxisSpacing: 15,
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Temukan berbagai koleksi tanaman hias\npilihan untuk rumah Anda',
+                          style: TextStyle(fontSize: 14, color: Colors.grey),
+                        ),
+                        const SizedBox(height: 15),
+                        // Search bar
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                height: 45,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[200],
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: TextField(
+                                  decoration: InputDecoration(
+                                    hintText: 'Cari tanaman...',
+                                    prefixIcon: const Icon(
+                                      Icons.search,
+                                      color: Colors.grey,
+                                    ),
+                                    border: InputBorder.none,
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
+                                    hintStyle: TextStyle(
+                                      color: Colors.grey[500],
+                                    ),
+                                  ),
+                                ),
+                              ),
                             ),
-                        itemCount: products.length,
-                        itemBuilder: (context, index) {
-                          final product = products[index];
-                          return _buildProductCard(
-                            name: product['name'],
-                            price: 'Rp${product['price']}',
-                            category: product['category'] ?? 'Uncategorized',
-                            rating: product['rating']?.toDouble() ?? 0.0,
-                            imageUrl: product['image'],
-                          );
-                        },
-                      ),
+                            const SizedBox(width: 10),
+                            GestureDetector(
+                              onTap: () {
+                                _showFilterDrawer(context);
+                              },
+                              child: Container(
+                                height: 45,
+                                width: 45,
+                                decoration: BoxDecoration(
+                                  color: AppTheme.primaryColor,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(
+                                  Icons.filter_list,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-          ),
-        ],
-      ),
+                  ),
+
+                  // Product grid
+                  Expanded(
+                    child: RefreshIndicator(
+                      onRefresh: fetchProducts,
+                      child:
+                          products.isEmpty
+                              ? const Center(child: Text('No products found'))
+                              : GridView.builder(
+                                padding: const EdgeInsets.all(15),
+                                gridDelegate:
+                                    const SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: 2,
+                                      childAspectRatio: 0.85,
+                                      crossAxisSpacing: 24,
+                                      mainAxisSpacing: 28,
+                                    ),
+                                itemCount: products.length,
+                                itemBuilder: (context, index) {
+                                  final product = products[index];
+                                  return _buildProductCard(
+                                    name: product['name'],
+                                    price: 'Rp${product['price']}',
+                                    category:
+                                        product['category'] ?? 'Uncategorized',
+                                    rating:
+                                        product['rating']?.toDouble() ?? 0.0,
+                                    imageUrl: product['image'],
+                                  );
+                                },
+                              ),
+                    ),
+                  ),
+                ],
+              ),
     );
   }
 
@@ -206,165 +225,19 @@ class _CategoryScreenState extends State<CategoryScreen> {
     required double rating,
     required String imageUrl,
   }) {
-    // Base URL for images
-    const String baseImgUrl = "http://192.168.51.213/hijauloka/uploads/";
-
-    // Clean and format the image URL
+    // Use the same image URL logic as before
+    const String baseImgUrl = "http://192.168.50.213/hijauloka/uploads/";
     String cleanImageUrl = imageUrl.trim();
-
-    // Remove any double slashes
     cleanImageUrl = cleanImageUrl.replaceAll('//', '/');
-
     final fullImageUrl = baseImgUrl + cleanImageUrl;
-    print('Loading image for $name: $fullImageUrl');
 
-    return GestureDetector(
+    return ProductCard(
+      name: name,
+      price: price,
+      imageUrl: fullImageUrl,
+      rating: rating,
+      category: category,
       onTap: () {},
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(15),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.15),
-              spreadRadius: 1,
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Product image with category label
-            Stack(
-              children: [
-                Hero(
-                  tag: 'product-$name',
-                  child: ClipRRect(
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(15),
-                    ),
-                    child: Image.network(
-                      fullImageUrl,
-                      height: 110,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return Container(
-                          height: 110,
-                          width: double.infinity,
-                          color: Colors.grey[200],
-                          child: Center(
-                            child: CircularProgressIndicator(
-                              value:
-                                  loadingProgress.expectedTotalBytes != null
-                                      ? loadingProgress.cumulativeBytesLoaded /
-                                          loadingProgress.expectedTotalBytes!
-                                      : null,
-                            ),
-                          ),
-                        );
-                      },
-                      errorBuilder: (context, error, stackTrace) {
-                        print('Image Error for $name:');
-                        print('Error: $error');
-                        print('Stack trace: $stackTrace');
-                        print('Attempted URL: $fullImageUrl');
-                        return Container(
-                          height: 110,
-                          width: double.infinity,
-                          color: Colors.grey[200],
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(
-                                Icons.image_not_supported,
-                                color: Colors.grey,
-                                size: 40,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Image not found',
-                                style: TextStyle(
-                                  color: Colors.grey[600],
-                                  fontSize: 10,
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: 8,
-                  left: 8,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryColor.withOpacity(0.9),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      category,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            // Content section
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    name,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Icon(Icons.star, size: 16, color: Colors.amber[700]),
-                      const SizedBox(width: 4),
-                      Text(
-                        rating.toStringAsFixed(1),
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    price,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.primaryColor,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 

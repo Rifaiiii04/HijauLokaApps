@@ -48,7 +48,7 @@ try {
     error_log("Raw product data: " . print_r($products, true));
     
     // Base URL for images
-    $base_img_url = "http://192.168.51.213/hijauloka/uploads/";
+    $base_img_url = "http://192.168.50.213/hijauloka/uploads/";
     
     // Format the response
     $response = array(

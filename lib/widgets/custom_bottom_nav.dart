@@ -60,7 +60,7 @@ class CustomBottomNav extends StatelessWidget {
     required String label,
   }) {
     final bool isSelected = selectedIndex == index;
-    
+
     return InkWell(
       onTap: () => onTap(index),
       child: Container(
