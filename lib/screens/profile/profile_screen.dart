@@ -47,7 +47,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
 
     try {
-      // Check if user is logged in and get current user data from shared preferences
       final isLoggedIn = await _authService.isLoggedIn();
 
       if (isLoggedIn) {
@@ -55,16 +54,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
         List<ShippingAddress> addresses = [];
 
         if (user != null) {
-          // Fetch additional user data if needed
-          // For example, you might want to refresh user data from the server
-          // final refreshedUserData = await _authService.refreshUserData(user.id);
-
-          // Fetch user's shipping addresses
-          addresses = await _addressService.getShippingAddresses();
-          print("User logged in: ${user.name}"); // Debug print
+          try {
+            addresses = await _addressService.getShippingAddresses();
+            print("User logged in: ${user.name}"); // Debug print
+          } catch (e) {
+            print("Error fetching addresses: $e");
+            addresses = [];
+          }
         } else {
           print("User is null despite isLoggedIn being true"); // Debug print
-          // This shouldn't happen, but if it does, clear the invalid session
           await _authService.logout();
         }
 
@@ -90,7 +88,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _errorMessage = "Error loading profile: $e";
+          _errorMessage = "Error loading profile: ${e.toString()}";
         });
       }
     }

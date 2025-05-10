@@ -7,6 +7,12 @@ class AddressService {
   final String baseUrl = 'http://192.168.50.213/hijauloka/api';
   final AuthService _authService = AuthService();
 
+  // Helper function untuk konversi ke string
+  String _toString(dynamic value) {
+    if (value == null) return '';
+    return value.toString();
+  }
+
   // Get all shipping addresses for the current user
   Future<List<ShippingAddress>> getShippingAddresses() async {
     final user = await _authService.getCurrentUser();
@@ -46,11 +52,11 @@ class AddressService {
       Uri.parse('$baseUrl/address/add_address.php'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
-        'user_id': user.id.toString(),
-        'recipient_name': address.recipientName,
-        'phone': address.phone,
+        'user_id': _toString(user.id),
+        'recipient_name': _toString(address.recipientName),
+        'phone': _toString(address.phone),
         'address_label': address.addressLabel,
-        'address': address.address,
+        'address': _toString(address.address),
         'rt': address.rt,
         'rw': address.rw,
         'house_number': address.houseNumber,
@@ -71,11 +77,11 @@ class AddressService {
       Uri.parse('$baseUrl/address/update_address.php'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
-        'id': address.id.toString(),
-        'recipient_name': address.recipientName,
-        'phone': address.phone,
+        'id': _toString(address.id),
+        'recipient_name': _toString(address.recipientName),
+        'phone': _toString(address.phone),
         'address_label': address.addressLabel,
-        'address': address.address,
+        'address': _toString(address.address),
         'rt': address.rt,
         'rw': address.rw,
         'house_number': address.houseNumber,
@@ -93,7 +99,7 @@ class AddressService {
     final response = await http.post(
       Uri.parse('$baseUrl/address/delete_address.php'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'id': addressId.toString()}),
+      body: jsonEncode({'id': _toString(addressId)}),
     );
 
     return jsonDecode(response.body);
@@ -111,8 +117,8 @@ class AddressService {
       Uri.parse('$baseUrl/address/set_primary.php'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
-        'id': addressId.toString(),
-        'user_id': user.id.toString(),
+        'id': _toString(addressId),
+        'user_id': _toString(user.id),
       }),
     );
 

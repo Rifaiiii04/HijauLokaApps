@@ -18,14 +18,46 @@ class User {
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
+    // Helper function untuk konversi ke int
+    int parseId(dynamic value) {
+      if (value == null) return 0;
+      if (value is int) return value;
+      if (value is String) {
+        try {
+          return int.parse(value);
+        } catch (e) {
+          return 0;
+        }
+      }
+      return 0;
+    }
+
+    // Helper function untuk konversi ke string
+    String parseString(dynamic value) {
+      if (value == null) return '';
+      return value.toString();
+    }
+
     return User(
-      id: json['id_user'] is String ? int.parse(json['id_user']) : json['id_user'],
-      name: json['nama'] ?? '',
-      email: json['email'] ?? '',
-      address: json['alamat'] ?? '',
-      shippingAddress: json['shipping_address'],
-      phone: json['no_tlp'] ?? '',
-      profileImage: json['profile_image'],
+      id: parseId(json['id_user']),
+      name: parseString(json['nama']),
+      email: parseString(json['email']),
+      address: parseString(json['alamat']),
+      shippingAddress: json['shipping_address']?.toString(),
+      phone: parseString(json['no_tlp']),
+      profileImage: json['profile_image']?.toString(),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id_user': id,
+      'nama': name,
+      'email': email,
+      'alamat': address,
+      'shipping_address': shippingAddress,
+      'no_tlp': phone,
+      'profile_image': profileImage,
+    };
   }
 }
