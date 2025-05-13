@@ -24,6 +24,7 @@ class ProductCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
+        height: 240, // Set a fixed height for the card
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(15),
@@ -53,12 +54,12 @@ class ProductCard extends StatelessWidget {
                       ),
                       child: Image.network(
                         imageUrl,
-                        height: 110,
+                        height: 110, // Reduced from 120 to 110
                         width: double.infinity,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
                           return Container(
-                            height: 110,
+                            height: 110, // Reduced from 120 to 110
                             width: double.infinity,
                             color: Colors.grey[200],
                             child: const Icon(
@@ -105,7 +106,7 @@ class ProductCard extends StatelessWidget {
                 ],
               ),
               // Product details
-              const SizedBox(height: 8),
+              const SizedBox(height: 10), // Increased from 8 to 10
               Text(
                 name,
                 style: const TextStyle(
@@ -115,7 +116,7 @@ class ProductCard extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: 4), // Increased from 2 to 4
               Row(
                 children: [
                   ...List.generate(

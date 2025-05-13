@@ -33,7 +33,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
 
       print('Fetching products...');
       final response = await http.get(
-        Uri.parse('http://192.168.50.213/hijauloka/api/get_products.php'),
+        Uri.parse('http://192.168.170.213/hijauloka/api/get_products.php'),
       );
 
       print('Response status code: ${response.statusCode}');
@@ -226,7 +226,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
     required String imageUrl,
   }) {
     // Use the same image URL logic as before
-    const String baseImgUrl = "http://192.168.50.213/hijauloka/uploads/";
+    const String baseImgUrl = "http://192.168.170.213/hijauloka/uploads/";
     String cleanImageUrl = imageUrl.trim();
     cleanImageUrl = cleanImageUrl.replaceAll('//', '/');
     final fullImageUrl = baseImgUrl + cleanImageUrl;

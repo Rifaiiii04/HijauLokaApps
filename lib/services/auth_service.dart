@@ -5,7 +5,7 @@ import 'package:hijauloka/models/user.dart';
 
 class AuthService {
   // Updated API URL to use your IP address
-  final String baseUrl = 'http://192.168.50.213/hijauloka/api';
+  final String baseUrl = 'http://192.168.170.213/hijauloka/api';
 
   // For storing user data
   static const String userKey = 'user_data';

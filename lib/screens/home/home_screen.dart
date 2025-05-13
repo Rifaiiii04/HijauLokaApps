@@ -35,7 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
     });
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.50.213/hijauloka/api/product/featured.php'),
+        Uri.parse('http://192.168.170.213/hijauloka/api/product/featured.php'),
       );
       print('API response: ${response.body}');
       if (response.statusCode == 200) {
