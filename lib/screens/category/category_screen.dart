@@ -4,6 +4,7 @@ import 'package:hijauloka/widgets/app_header.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:hijauloka/widgets/product_card.dart';
+import 'package:hijauloka/screens/product/product_detail_screen.dart'; // Add this import
 
 class CategoryScreen extends StatefulWidget {
   const CategoryScreen({super.key});
@@ -200,14 +201,24 @@ class _CategoryScreenState extends State<CategoryScreen> {
                                 itemCount: products.length,
                                 itemBuilder: (context, index) {
                                   final product = products[index];
+                                  // Debug the product data
+                                  print('Product at index $index: $product');
+                                  
+                                  // Try to extract ID directly
+                                  int? productId;
+                                  if (product.containsKey('id_product')) {
+                                    productId = int.tryParse(product['id_product'].toString());
+                                  } else if (product.containsKey('id')) {
+                                    productId = int.tryParse(product['id'].toString());
+                                  }
+                                  
                                   return _buildProductCard(
                                     name: product['name'],
                                     price: 'Rp${product['price']}',
-                                    category:
-                                        product['category'] ?? 'Uncategorized',
-                                    rating:
-                                        product['rating']?.toDouble() ?? 0.0,
+                                    category: product['category'] ?? 'Uncategorized',
+                                    rating: product['rating']?.toDouble() ?? 0.0,
                                     imageUrl: product['image'],
+                                    productId: productId, // Pass the ID directly
                                   );
                                 },
                               ),
@@ -224,12 +235,24 @@ class _CategoryScreenState extends State<CategoryScreen> {
     required String category,
     required double rating,
     required String imageUrl,
+    int? productId,
   }) {
-    // Use the same image URL logic as before
+    // Image URL logic remains the same
     const String baseImgUrl = "http://192.168.170.213/hijauloka/uploads/";
-    String cleanImageUrl = imageUrl.trim();
-    cleanImageUrl = cleanImageUrl.replaceAll('//', '/');
-    final fullImageUrl = baseImgUrl + cleanImageUrl;
+    String fullImageUrl;
+    
+    try {
+      if (imageUrl.isEmpty || imageUrl == "null") {
+        throw Exception("Invalid image URL");
+      }
+      String cleanImageUrl = imageUrl.trim();
+      cleanImageUrl = cleanImageUrl.replaceAll('//', '/');
+      fullImageUrl = baseImgUrl + cleanImageUrl;
+    } catch (e) {
+      print("Error processing image URL: $e");
+      // Fallback to a placeholder if there's an issue with the URL
+      fullImageUrl = 'https://via.placeholder.com/150';
+    }
 
     return ProductCard(
       name: name,
@@ -237,7 +260,23 @@ class _CategoryScreenState extends State<CategoryScreen> {
       imageUrl: fullImageUrl,
       rating: rating,
       category: category,
-      onTap: () {},
+      onTap: () {
+        if (productId != null) {
+          print('Navigating to product detail: $productId');
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ProductDetailScreen(productId: productId),
+            ),
+          );
+        } else {
+          print('Cannot navigate: product ID is null');
+          // Show a snackbar to inform the user
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Cannot open product details')),
+          );
+        }
+      },
     );
   }
 
