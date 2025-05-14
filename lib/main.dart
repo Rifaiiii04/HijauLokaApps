@@ -6,9 +6,19 @@ import 'package:hijauloka/screens/profile/profile_screen.dart';
 import 'package:hijauloka/widgets/custom_bottom_nav.dart';
 import 'package:hijauloka/screens/auth/login_screen.dart';
 import 'package:hijauloka/screens/auth/register_screen.dart';
+import 'package:provider/provider.dart';
+import 'package:hijauloka/providers/filter_provider.dart';
 
 void main() {
-  runApp(const HijauLokaApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => FilterProvider()),
+        // Add other providers here if needed
+      ],
+      child: const HijauLokaApp(),
+    ),
+  );
 }
 
 class HijauLokaApp extends StatelessWidget {
