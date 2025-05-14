@@ -106,7 +106,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
       print('Mengambil detail produk untuk ID: ${widget.productId}');
       final response = await http.get(
-        Uri.parse('http://localhost/hijauloka/api/get_product_detail.php?id=${widget.productId}'),
+        Uri.parse('http://192.168.170.213/hijauloka/api/get_product_detail.php?id=${widget.productId}'),
       );
 
       print('Kode status respons: ${response.statusCode}');
@@ -200,9 +200,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   Widget _buildProductDetail() {
     final product = productDetail!;
-    const String baseImgUrl = "http://localhost/hijauloka/uploads/";
-    final String imageUrl = baseImgUrl + (product['gambar'] ?? '');
-
+    
+    // Gunakan image_url dari API jika tersedia, jika tidak buat URL sendiri
+    final String imageUrl = product['image_url'] ?? 
+                           "http://192.168.170.213/hijauloka/uploads/" + (product['gambar'] ?? '');
+    
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -214,7 +216,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             decoration: BoxDecoration(
               color: Colors.grey[100],
             ),
-            child: product['gambar'] == null || product['gambar'].toString().isEmpty
+            child: (product['gambar'] == null || product['gambar'].toString().isEmpty) && 
+                  (product['image_url'] == null || product['image_url'].toString().isEmpty)
                 ? _buildImagePlaceholder()
                 : Image.network(
                     imageUrl,

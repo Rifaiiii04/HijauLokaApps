@@ -51,6 +51,16 @@ try {
     
     $product = $stmt->fetch(PDO::FETCH_ASSOC);
     
+    // Add full image URL to the product data
+    $baseImgUrl = "http://localhost/hijauloka/uploads/";
+    if (!empty($product['gambar'])) {
+        $cleanImageUrl = trim($product['gambar']);
+        $cleanImageUrl = str_replace('//', '/', $cleanImageUrl);
+        $product['image_url'] = $baseImgUrl . $cleanImageUrl;
+    } else {
+        $product['image_url'] = '';
+    }
+    
     // Get reviews for this product with user information
     $reviewQuery = "
         SELECT r.*, u.nama as username, u.profile_image
@@ -66,6 +76,15 @@ try {
     
     $reviews = [];
     while ($review = $reviewStmt->fetch(PDO::FETCH_ASSOC)) {
+        // Add full profile image URL to each review
+        if (!empty($review['profile_image'])) {
+            $cleanProfileImg = trim($review['profile_image']);
+            $cleanProfileImg = str_replace('//', '/', $cleanProfileImg);
+            $review['profile_image_url'] = $baseImgUrl . $cleanProfileImg;
+        } else {
+            $review['profile_image_url'] = '';
+        }
+        
         $reviews[] = $review;
     }
     
