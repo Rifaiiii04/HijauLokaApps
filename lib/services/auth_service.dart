@@ -4,8 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hijauloka/models/user.dart';
 
 class AuthService {
-  // Updated API URL to use your IP address
-  final String baseUrl = 'http://192.168.170.213/hijauloka/api';
+  // Updated API URL to use hosted URL
+  final String baseUrl = 'https://admin.hijauloka.my.id/api';
 
   // For storing user data
   static const String userKey = 'user_data';

@@ -106,7 +106,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
       print('Mengambil detail produk untuk ID: ${widget.productId}');
       final response = await http.get(
-        Uri.parse('http://192.168.170.213/hijauloka/api/get_product_detail.php?id=${widget.productId}'),
+        Uri.parse('https://admin.hijauloka.my.id/api/get_product_detail.php?id=${widget.productId}'),
       );
 
       print('Kode status respons: ${response.statusCode}');
@@ -203,7 +203,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     
     // Gunakan image_url dari API jika tersedia, jika tidak buat URL sendiri
     final String imageUrl = product['image_url'] ?? 
-                           "http://192.168.170.213/hijauloka/uploads/" + (product['gambar'] ?? '');
+                           "https://admin.hijauloka.my.id/uploads/" + (product['gambar'] ?? '');
     
     return SingleChildScrollView(
       child: Column(
@@ -216,8 +216,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             decoration: BoxDecoration(
               color: Colors.grey[100],
             ),
-            child: (product['gambar'] == null || product['gambar'].toString().isEmpty) && 
-                  (product['image_url'] == null || product['image_url'].toString().isEmpty)
+            child: imageUrl.isEmpty
                 ? _buildImagePlaceholder()
                 : Image.network(
                     imageUrl,

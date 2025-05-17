@@ -18,9 +18,9 @@ $id = intval($_GET['id']);
 try {
     // Database configuration directly in this file
     $host = "localhost";
-    $db_name = "hijauloka";
-    $username = "root";
-    $password = "";
+    $db_name = "hijc7862_hijauloka";
+    $username = "hijc7862_admin";
+    $password = "wyn[=?alPV%.";
     
     // Create connection
     $conn = new PDO("mysql:host=" . $host . ";dbname=" . $db_name, $username, $password);
@@ -52,7 +52,7 @@ try {
     $product = $stmt->fetch(PDO::FETCH_ASSOC);
     
     // Add full image URL to the product data
-    $baseImgUrl = "http://localhost/hijauloka/uploads/";
+    $baseImgUrl = "https://admin.hijauloka.my.id/uploads/";
     if (!empty($product['gambar'])) {
         $cleanImageUrl = trim($product['gambar']);
         $cleanImageUrl = str_replace('//', '/', $cleanImageUrl);

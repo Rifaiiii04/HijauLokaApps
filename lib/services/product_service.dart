@@ -3,8 +3,8 @@ import 'package:http/http.dart' as http;
 import 'package:hijauloka/models/product.dart';
 
 class ProductService {
-  static const String baseUrl = 'http://192.168.170.213/hijauloka/api';
-  static const String imageBaseUrl = 'http://192.168.170.213/hijauloka/uploads/';
+  static const String baseUrl = 'https://admin.hijauloka.my.id/api';
+  static const String imageBaseUrl = 'https://admin.hijauloka.my.id/uploads/';
 
   Future<List<Product>> fetchProducts() async {
     try {

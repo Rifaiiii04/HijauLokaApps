@@ -32,7 +32,7 @@ $query = "
 $stmt = $db->prepare($query);
 $stmt->execute();
 
-$base_img_url = "http://192.168.50.213/hijauloka/uploads/";
+$base_img_url = "https://admin.hijauloka.my.id/uploads/";
 
 $featured_products = [];
 while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {

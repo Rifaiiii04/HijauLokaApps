@@ -9,9 +9,9 @@ ini_set('display_errors', 1);
 
 // Database configuration
 $host = 'localhost';
-$dbname = 'hijauloka';
-$username = 'root';
-$password = '';
+$dbname = 'hijc7862_hijauloka';
+$username = 'hijc7862_admin';
+$password = 'wyn[=?alPV%.';
 
 try {
     // Create database connection
@@ -48,7 +48,7 @@ try {
     error_log("Raw product data: " . print_r($products, true));
     
     // Base URL for images
-    $base_img_url = "http://192.168.50.213/hijauloka/uploads/";
+    $base_img_url = "https://admin.hijauloka.my.id/uploads/";
     
     // Format the response
     $response = array(
@@ -119,4 +119,4 @@ try {
     http_response_code(500);
     echo json_encode($response);
 }
-?> 
+?>

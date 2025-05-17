@@ -4,7 +4,7 @@ import 'package:hijauloka/models/shipping_address.dart';
 import 'package:hijauloka/services/auth_service.dart';
 
 class AddressService {
-  final String baseUrl = 'http://192.168.170.213/hijauloka/api';
+  final String baseUrl = 'https://admin.hijauloka.my.id/api';
   final AuthService _authService = AuthService();
 
   // Helper function untuk konversi ke string

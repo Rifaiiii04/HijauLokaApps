@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:hijauloka/config/theme.dart';
-import 'package:hijauloka/widgets/product_card.dart';
+// import 'package:hijauloka/widgets/product_card.dart';
 import 'package:hijauloka/widgets/app_header.dart';
 import 'package:http/http.dart' as http;
 import '../../models/featured_product.dart';
@@ -35,7 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
     });
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.170.213/hijauloka/api/product/featured.php'),
+        Uri.parse('https://admin.hijauloka.my.id/api/get_featured_products.php'),
       );
       print('API response: ${response.body}');
       if (response.statusCode == 200) {
