@@ -35,7 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
     });
     try {
       final response = await http.get(
-        Uri.parse('https://admin.hijauloka.my.id/api/get_featured_products.php'),
+        Uri.parse('https://admin.hijauloka.my.id/api/product/featured.php'),
       );
       print('API response: ${response.body}');
       if (response.statusCode == 200) {
@@ -116,10 +116,24 @@ class _HomeScreenState extends State<HomeScreen> {
                             itemCount: _products.length,
                             itemBuilder: (context, index) {
                               final product = _products[index];
-                              final imageUrl =
-                                  (product.gambar ?? '').trim().isNotEmpty
-                                      ? (product.gambar ?? '').trim()
-                                      : 'https://via.placeholder.com/150';
+                              
+                              // Fixed image URL handling to prevent duplication
+                              String imageUrl;
+                              if (product.gambar != null && product.gambar!.isNotEmpty) {
+                                // Check if the image path already contains the full URL
+                                if (product.gambar!.startsWith('http')) {
+                                  imageUrl = product.gambar!;
+                                } else if (product.gambar!.startsWith('uploads/')) {
+                                  imageUrl = "https://admin.hijauloka.my.id/${product.gambar}";
+                                } else {
+                                  imageUrl = "https://admin.hijauloka.my.id/uploads/${product.gambar}";
+                                }
+                              } else {
+                                imageUrl = 'https://via.placeholder.com/150';
+                              }
+                              
+                              print('Loading image from: $imageUrl');
+                              
                               return Padding(
                                 padding: const EdgeInsets.only(right: 15),
                                 child: Container(
@@ -155,6 +169,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                             error,
                                             stackTrace,
                                           ) {
+                                            print('Error loading image: $error');
+                                            print('Failed URL: $imageUrl');
                                             return Container(
                                               height: 110,
                                               width: double.infinity,
