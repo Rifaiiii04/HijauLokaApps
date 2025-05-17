@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:hijauloka/config/theme.dart';
+import 'package:hijauloka/models/product.dart'; // Add this import
 
 class ProductDetail {
   final int id;
@@ -78,10 +79,13 @@ class Review {
 }
 
 class ProductDetailScreen extends StatefulWidget {
-  final int productId;
-
-  const ProductDetailScreen({Key? key, required this.productId}) : super(key: key);
-
+  final Product product;
+  
+  const ProductDetailScreen({
+    Key? key,
+    required this.product,
+  }) : super(key: key);
+  
   @override
   State<ProductDetailScreen> createState() => _ProductDetailScreenState();
 }
@@ -104,41 +108,70 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         errorMessage = '';
       });
 
-      print('Mengambil detail produk untuk ID: ${widget.productId}');
+      print('Fetching product detail for ID: ${widget.product.id}');
       final response = await http.get(
-        Uri.parse('https://admin.hijauloka.my.id/api/get_product_detail.php?id=${widget.productId}'),
-      );
+        Uri.parse('https://admin.hijauloka.my.id/api/get_product_detail.php?id=${widget.product.id}'),
+      ).timeout(const Duration(seconds: 15));
 
-      print('Kode status respons: ${response.statusCode}');
-      print('Isi respons: ${response.body}');
+      print('Response status code: ${response.statusCode}');
+      print('Response body: ${response.body}');
 
       if (response.statusCode == 200) {
+        if (response.body.isEmpty) {
+          throw Exception('Empty response from server');
+        }
+        
         final data = json.decode(response.body);
         
-        if (data['status'] == 'success') {
+        // Check for both 'success' and 'status' keys as API might use either
+        if ((data['success'] == true || data['status'] == 'success') && data['data'] != null) {
           setState(() {
             productDetail = data['data'];
             isLoading = false;
           });
         } else {
           setState(() {
-            errorMessage = data['message'] ?? 'Gagal memuat detail produk';
+            errorMessage = data['message'] ?? 'Failed to load product details';
             isLoading = false;
           });
         }
       } else {
         setState(() {
-          errorMessage = 'Kesalahan server: ${response.statusCode}';
+          errorMessage = 'Server error: ${response.statusCode}';
           isLoading = false;
         });
       }
     } catch (e) {
-      print('Error mengambil detail produk: $e');
+      print('Error fetching product detail: $e');
       setState(() {
-        errorMessage = 'Kesalahan koneksi: $e';
+        errorMessage = 'Connection error: $e';
         isLoading = false;
       });
     }
+  }
+
+  // Move the _buildImagePlaceholder function inside the class
+  Widget _buildImagePlaceholder() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.image_not_supported_outlined, 
+            size: 64, 
+            color: Colors.grey[400]
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Gambar tidak tersedia',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 16,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -537,26 +570,3 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
   }
 }
-
-Widget _buildImagePlaceholder() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.image_not_supported_outlined, 
-            size: 64, 
-            color: Colors.grey[400]
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Gambar tidak tersedia',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 16,
-            ),
-          ),
-        ],
-      ),
-    );
-  }

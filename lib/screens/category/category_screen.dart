@@ -224,7 +224,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
-                                            builder: (context) => ProductDetailScreen(productId: product.id),
+                                            builder: (context) => ProductDetailScreen(product: product),
                                           ),
                                         );
                                       },
