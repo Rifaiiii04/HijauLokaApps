@@ -4,6 +4,7 @@ import 'package:hijauloka/models/blog_post.dart';
 import 'package:hijauloka/services/blog_service.dart';
 import 'package:hijauloka/widgets/app_header.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_html/flutter_html.dart';
 
 class BlogDetailScreen extends StatefulWidget {
   const BlogDetailScreen({super.key});
@@ -17,11 +18,15 @@ class _BlogDetailScreenState extends State<BlogDetailScreen> {
   bool _isLoading = true;
   BlogPost? _post;
   String? _errorMessage;
+  bool _isFirstLoad = true;
 
   @override
-  void initState() {
-    super.initState();
-    _loadPost();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_isFirstLoad) {
+      _loadPost();
+      _isFirstLoad = false;
+    }
   }
 
   Future<void> _loadPost() async {
@@ -197,12 +202,62 @@ class _BlogDetailScreenState extends State<BlogDetailScreen> {
                             ),
                           ],
                           const SizedBox(height: 24),
-                          Text(
-                            _post!.content,
-                            style: TextStyle(
-                              fontSize: isSmallScreen ? 14 : 16,
-                              height: 1.6,
-                            ),
+                          Html(
+                            data: _post!.content,
+                            style: {
+                              "body": Style(
+                                fontSize: FontSize(isSmallScreen ? 14 : 16),
+                                lineHeight: LineHeight.em(1.6),
+                              ),
+                              "p": Style(margin: Margins(bottom: Margin(16))),
+                              "h1": Style(
+                                fontSize: FontSize(isSmallScreen ? 20 : 24),
+                                fontWeight: FontWeight.bold,
+                                margin: Margins(
+                                  bottom: Margin(16),
+                                  top: Margin(24),
+                                ),
+                              ),
+                              "h2": Style(
+                                fontSize: FontSize(isSmallScreen ? 18 : 22),
+                                fontWeight: FontWeight.bold,
+                                margin: Margins(
+                                  bottom: Margin(14),
+                                  top: Margin(20),
+                                ),
+                              ),
+                              "h3": Style(
+                                fontSize: FontSize(isSmallScreen ? 16 : 20),
+                                fontWeight: FontWeight.bold,
+                                margin: Margins(
+                                  bottom: Margin(12),
+                                  top: Margin(16),
+                                ),
+                              ),
+                              "a": Style(
+                                color: AppTheme.primaryColor,
+                                textDecoration: TextDecoration.underline,
+                              ),
+                              "img": Style(
+                                margin: Margins(
+                                  top: Margin(16),
+                                  bottom: Margin(16),
+                                ),
+                              ),
+                              "ul": Style(
+                                margin: Margins(
+                                  bottom: Margin(16),
+                                  left: Margin(20),
+                                ),
+                              ),
+                              "ol": Style(
+                                margin: Margins(
+                                  bottom: Margin(16),
+                                  left: Margin(20),
+                                ),
+                              ),
+                              "li": Style(margin: Margins(bottom: Margin(8))),
+                            },
                           ),
                         ],
                       ),
