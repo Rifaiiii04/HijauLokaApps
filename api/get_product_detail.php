@@ -17,7 +17,7 @@ $id = intval($_GET['id']);
 
 try {
     // Database configuration directly in this file
-    $host = "localhost";
+    $host = "103.247.11.220";
     $db_name = "hijc7862_hijauloka";
     $username = "hijc7862_admin";
     $password = "wyn[=?alPV%.";

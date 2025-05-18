@@ -1,49 +1,50 @@
 class ShippingAddress {
   final int id;
-  final int userId;
   final String recipientName;
   final String phone;
-  final String? addressLabel;
+  final String addressLabel;
   final String address;
-  final String? rt;
-  final String? rw;
-  final String? houseNumber;
-  final String? postalCode;
-  final String? detailAddress;
+  final String rt;
+  final String rw;
+  final String houseNumber;
+  final String postalCode;
+  final String detailAddress;
   final bool isPrimary;
-  final String createdAt;
+  final double distance;
 
   ShippingAddress({
     required this.id,
-    required this.userId,
     required this.recipientName,
     required this.phone,
-    this.addressLabel,
+    required this.addressLabel,
     required this.address,
-    this.rt,
-    this.rw,
-    this.houseNumber,
-    this.postalCode,
-    this.detailAddress,
+    required this.rt,
+    required this.rw,
+    required this.houseNumber,
+    required this.postalCode,
+    required this.detailAddress,
     required this.isPrimary,
-    required this.createdAt,
+    required this.distance,
   });
+
+  String get fullAddress {
+    return '$address, RT $rt/RW $rw, No. $houseNumber, $postalCode';
+  }
 
   factory ShippingAddress.fromJson(Map<String, dynamic> json) {
     return ShippingAddress(
-      id: int.parse(json['id']),
-      userId: int.parse(json['user_id']),
+      id: int.parse(json['id'].toString()),
       recipientName: json['recipient_name'] ?? '',
       phone: json['phone'] ?? '',
-      addressLabel: json['address_label'],
+      addressLabel: json['address_label'] ?? '',
       address: json['address'] ?? '',
-      rt: json['rt'],
-      rw: json['rw'],
-      houseNumber: json['house_number'],
-      postalCode: json['postal_code'],
-      detailAddress: json['detail_address'],
-      isPrimary: json['is_primary'] == '1',
-      createdAt: json['created_at'] ?? '',
+      rt: json['rt'] ?? '',
+      rw: json['rw'] ?? '',
+      houseNumber: json['house_number'] ?? '',
+      postalCode: json['postal_code'] ?? '',
+      detailAddress: json['detail_address'] ?? '',
+      isPrimary: json['is_primary'] == '1' || json['is_primary'] == 1,
+      distance: double.tryParse(json['jarak']?.toString() ?? '0') ?? 0,
     );
   }
 }

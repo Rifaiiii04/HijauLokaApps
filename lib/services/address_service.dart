@@ -21,6 +21,7 @@ class AddressService {
       return [];
     }
 
+    // Using the correct path with /api/address/
     final response = await http.get(
       Uri.parse('$baseUrl/address/get_addresses.php?user_id=${user.id}'),
       headers: {'Content-Type': 'application/json'},

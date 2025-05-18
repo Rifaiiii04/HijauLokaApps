@@ -7,7 +7,7 @@
 header('Content-Type: application/json; charset=utf-8');
 
 // Database connection
-$host = "localhost";
+$host = "103.247.11.220";
 $username = "hijc7862_admin"; // Updated username
 $password = "wyn[=?alPV%."; // Updated password
 $database = "hijc7862_hijauloka"; // Updated database name

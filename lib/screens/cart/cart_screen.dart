@@ -1,11 +1,13 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:http/http.dart'
+    as http; // Keep for compatibility with existing code
 import 'package:hijauloka/config/theme.dart';
-import 'package:hijauloka/models/product.dart';
-import 'package:hijauloka/services/product_service.dart';
 import 'package:hijauloka/widgets/app_header.dart';
-import 'package:hijauloka/services/auth_service.dart'; // Add this import
+import 'package:hijauloka/services/auth_service.dart';
+import 'package:hijauloka/screens/checkout/checkout_screen.dart';
+import 'package:hijauloka/services/api_client.dart';
+import 'package:hijauloka/widgets/network_error_dialog.dart';
 
 class CartItem {
   final int id;
@@ -14,6 +16,7 @@ class CartItem {
   final double productPrice;
   final String productImage;
   int quantity;
+  bool isSelected; // Add selection state
 
   CartItem({
     required this.id,
@@ -22,6 +25,7 @@ class CartItem {
     required this.productPrice,
     required this.productImage,
     required this.quantity,
+    this.isSelected = true, // Default to selected
   });
 
   double get totalPrice => productPrice * quantity;
@@ -51,6 +55,7 @@ class _CartScreenState extends State<CartScreen> {
   String _errorMessage = '';
   String? _userId;
   bool _isLoggedIn = false;
+  bool _selectAll = true; // Track if all items are selected
 
   @override
   void initState() {
@@ -61,12 +66,12 @@ class _CartScreenState extends State<CartScreen> {
   Future<void> _checkLoginStatus() async {
     final isLoggedIn = await AuthService.isLoggedIn();
     final userId = await AuthService.getUserId();
-    
+
     setState(() {
       _isLoggedIn = isLoggedIn;
       _userId = userId;
     });
-    
+
     if (isLoggedIn && userId != null) {
       _loadCartItems();
     } else {
@@ -85,37 +90,29 @@ class _CartScreenState extends State<CartScreen> {
       });
       return;
     }
-    
+
     setState(() {
       _isLoading = true;
       _errorMessage = '';
     });
-    
+
     try {
-      final response = await http.get(
-        Uri.parse('https://admin.hijauloka.my.id/api/get_cart.php?id_user=$_userId'),
-      ).timeout(const Duration(seconds: 15));
-      
-      print('Cart response: ${response.body}');
-      
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        
-        if (data['success'] == true) {
-          final cartData = data['data'] as List;
-          setState(() {
-            _cartItems = cartData.map((item) => CartItem.fromJson(item)).toList();
-            _isLoading = false;
-          });
-        } else {
-          setState(() {
-            _errorMessage = data['message'] ?? 'Failed to load cart items';
-            _isLoading = false;
-          });
-        }
+      final response = await ApiClient.get(
+        'get_cart.php',
+        queryParams: {'id_user': _userId!},
+        converter: (data) {
+          return (data as List).map((item) => CartItem.fromJson(item)).toList();
+        },
+      );
+
+      if (response.success) {
+        setState(() {
+          _cartItems = response.data ?? [];
+          _isLoading = false;
+        });
       } else {
         setState(() {
-          _errorMessage = 'Server error: ${response.statusCode}';
+          _errorMessage = response.message;
           _isLoading = false;
         });
       }
@@ -130,29 +127,31 @@ class _CartScreenState extends State<CartScreen> {
 
   Future<void> _updateQuantity(int index, int newQuantity) async {
     final item = _cartItems[index];
-    
+
     if (newQuantity <= 0) {
       // Remove the item
       await _removeItem(index);
       return;
     }
-    
+
     setState(() {
       _isLoading = true;
     });
-    
+
     try {
-      final response = await http.post(
-        Uri.parse('https://admin.hijauloka.my.id/api/update_cart.php'),
-        body: {
-          'id_cart': item.id.toString(),
-          'jumlah': newQuantity.toString(),
-        },
-      ).timeout(const Duration(seconds: 15));
-      
+      final response = await http
+          .post(
+            Uri.parse('https://admin.hijauloka.my.id/api/update_cart.php'),
+            body: {
+              'id_cart': item.id.toString(),
+              'jumlah': newQuantity.toString(),
+            },
+          )
+          .timeout(const Duration(seconds: 15));
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        
+
         if (data['success'] == true) {
           setState(() {
             _cartItems[index].quantity = newQuantity;
@@ -190,22 +189,22 @@ class _CartScreenState extends State<CartScreen> {
 
   Future<void> _removeItem(int index) async {
     final item = _cartItems[index];
-    
+
     setState(() {
       _isLoading = true;
     });
-    
+
     try {
-      final response = await http.post(
-        Uri.parse('https://admin.hijauloka.my.id/api/remove_from_cart.php'),
-        body: {
-          'id_cart': item.id.toString(),
-        },
-      ).timeout(const Duration(seconds: 15));
-      
+      final response = await http
+          .post(
+            Uri.parse('https://admin.hijauloka.my.id/api/remove_from_cart.php'),
+            body: {'id_cart': item.id.toString()},
+          )
+          .timeout(const Duration(seconds: 15));
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        
+
         if (data['success'] == true) {
           setState(() {
             _cartItems.removeAt(index);
@@ -213,7 +212,9 @@ class _CartScreenState extends State<CartScreen> {
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(data['message'] ?? 'Failed to remove item from cart'),
+              content: Text(
+                data['message'] ?? 'Failed to remove item from cart',
+              ),
               backgroundColor: Colors.red,
             ),
           );
@@ -241,8 +242,38 @@ class _CartScreenState extends State<CartScreen> {
     }
   }
 
-  double get _totalPrice {
-    return _cartItems.fold(0, (sum, item) => sum + item.totalPrice);
+  // Toggle selection for all items
+  void _toggleSelectAll() {
+    setState(() {
+      _selectAll = !_selectAll;
+      for (var item in _cartItems) {
+        item.isSelected = _selectAll;
+      }
+    });
+  }
+
+  // Toggle selection for a single item
+  void _toggleItemSelection(int index) {
+    setState(() {
+      _cartItems[index].isSelected = !_cartItems[index].isSelected;
+      // Update _selectAll based on all items selection state
+      _selectAll = _cartItems.every((item) => item.isSelected);
+    });
+  }
+
+  // Get only selected items
+  List<CartItem> get _selectedItems {
+    return _cartItems.where((item) => item.isSelected).toList();
+  }
+
+  // Calculate subtotal for selected items only
+  double get _selectedTotalPrice {
+    return _selectedItems.fold(0, (sum, item) => sum + item.totalPrice);
+  }
+
+  // Check if any items are selected
+  bool get _hasSelectedItems {
+    return _cartItems.any((item) => item.isSelected);
   }
 
   @override
@@ -250,18 +281,22 @@ class _CartScreenState extends State<CartScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: const AppHeader(title: 'Keranjang Belanja'),
-      body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: AppTheme.primaryColor),
-            )
-          : !_isLoggedIn
+      body:
+          _isLoading
+              ? const Center(
+                child: CircularProgressIndicator(color: AppTheme.primaryColor),
+              )
+              : !_isLoggedIn
               ? _buildLoginRequired()
               : _errorMessage.isNotEmpty
-                  ? _buildErrorView()
-                  : _cartItems.isEmpty
-                      ? _buildEmptyCart()
-                      : _buildCartList(),
-      bottomNavigationBar: (!_isLoggedIn || _cartItems.isEmpty) ? null : _buildCheckoutBar(),
+              ? _buildErrorView()
+              : _cartItems.isEmpty
+              ? _buildEmptyCart()
+              : _buildCartList(),
+      bottomNavigationBar:
+          (!_isLoggedIn || _cartItems.isEmpty || !_hasSelectedItems)
+              ? null
+              : _buildCheckoutBar(),
     );
   }
 
@@ -287,9 +322,7 @@ class _CartScreenState extends State<CartScreen> {
           const SizedBox(height: 8),
           Text(
             'Silakan login untuk melihat keranjang belanja Anda',
-            style: TextStyle(
-              color: Colors.grey[600],
-            ),
+            style: TextStyle(color: Colors.grey[600]),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
@@ -310,18 +343,42 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   Widget _buildErrorView() {
+    // Check if the error is related to connection issues
+    final bool isConnectionError =
+        _errorMessage.toLowerCase().contains('connection') ||
+        _errorMessage.toLowerCase().contains('refused') ||
+        _errorMessage.toLowerCase().contains('network') ||
+        _errorMessage.toLowerCase().contains('timeout');
+
+    if (isConnectionError) {
+      // Show the connection error dialog when the view is built
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          NetworkErrorDialog.show(
+            context,
+            message: _errorMessage,
+            onRetry: _loadCartItems,
+            onContinue: () {
+              // Navigate back to home screen
+              Navigator.pop(context);
+            },
+          );
+        }
+      });
+    }
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.error_outline,
+            isConnectionError ? Icons.wifi_off : Icons.error_outline,
             size: 64,
             color: Colors.red[300],
           ),
           const SizedBox(height: 16),
           Text(
-            'Error Loading Cart',
+            isConnectionError ? 'Connection Problem' : 'Error Loading Cart',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -332,10 +389,10 @@ class _CartScreenState extends State<CartScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32),
             child: Text(
-              _errorMessage,
-              style: TextStyle(
-                color: Colors.grey[600],
-              ),
+              isConnectionError
+                  ? 'Cannot connect to the server. Please check your internet connection.'
+                  : _errorMessage,
+              style: TextStyle(color: Colors.grey[600]),
               textAlign: TextAlign.center,
             ),
           ),
@@ -358,11 +415,7 @@ class _CartScreenState extends State<CartScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.shopping_cart_outlined,
-            size: 80,
-            color: Colors.grey[400],
-          ),
+          Icon(Icons.shopping_cart_outlined, size: 80, color: Colors.grey[400]),
           const SizedBox(height: 16),
           Text(
             'Keranjang Belanja Kosong',
@@ -375,9 +428,7 @@ class _CartScreenState extends State<CartScreen> {
           const SizedBox(height: 8),
           Text(
             'Tambahkan produk ke keranjang untuk mulai berbelanja',
-            style: TextStyle(
-              color: Colors.grey[600],
-            ),
+            style: TextStyle(color: Colors.grey[600]),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
@@ -399,6 +450,28 @@ class _CartScreenState extends State<CartScreen> {
   Widget _buildCartList() {
     return Column(
       children: [
+        // Select all option
+        Container(
+          color: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            children: [
+              Checkbox(
+                value: _selectAll,
+                onChanged: (_) => _toggleSelectAll(),
+                activeColor: AppTheme.primaryColor,
+              ),
+              Text(
+                'Pilih Semua Produk',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey[800],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const Divider(height: 1),
         Expanded(
           child: ListView.builder(
             padding: const EdgeInsets.all(16),
@@ -427,6 +500,12 @@ class _CartScreenState extends State<CartScreen> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Add checkbox
+            Checkbox(
+              value: item.isSelected,
+              onChanged: (_) => _toggleItemSelection(index),
+              activeColor: AppTheme.primaryColor,
+            ),
             // Product Image
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
@@ -440,7 +519,10 @@ class _CartScreenState extends State<CartScreen> {
                     width: 80,
                     height: 80,
                     color: Colors.grey[200],
-                    child: Icon(Icons.image_not_supported, color: Colors.grey[400]),
+                    child: Icon(
+                      Icons.image_not_supported,
+                      color: Colors.grey[400],
+                    ),
                   );
                 },
               ),
@@ -477,28 +559,38 @@ class _CartScreenState extends State<CartScreen> {
                         children: [
                           _buildQuantityButton(
                             icon: Icons.remove,
-                            onPressed: () => _updateQuantity(index, item.quantity - 1),
+                            onPressed:
+                                () => _updateQuantity(index, item.quantity - 1),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               border: Border.all(color: Colors.grey[300]!),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
                               '${item.quantity}',
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                           _buildQuantityButton(
                             icon: Icons.add,
-                            onPressed: () => _updateQuantity(index, item.quantity + 1),
+                            onPressed:
+                                () => _updateQuantity(index, item.quantity + 1),
                           ),
                         ],
                       ),
                       // Delete Button
                       IconButton(
-                        icon: const Icon(Icons.delete_outline, color: Colors.red),
+                        icon: const Icon(
+                          Icons.delete_outline,
+                          color: Colors.red,
+                        ),
                         onPressed: () => _removeItem(index),
                       ),
                     ],
@@ -512,7 +604,10 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
-  Widget _buildQuantityButton({required IconData icon, required VoidCallback onPressed}) {
+  Widget _buildQuantityButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+  }) {
     return InkWell(
       onTap: onPressed,
       child: Container(
@@ -544,21 +639,18 @@ class _CartScreenState extends State<CartScreen> {
         children: [
           const Text(
             'Ringkasan Pesanan',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Subtotal (${_cartItems.length} item)',
+                'Subtotal (${_selectedItems.length} item)',
                 style: TextStyle(color: Colors.grey[600]),
               ),
               Text(
-                'Rp${_totalPrice.toStringAsFixed(0)}',
+                'Rp${_selectedTotalPrice.toStringAsFixed(0)}',
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ],
@@ -583,13 +675,10 @@ class _CartScreenState extends State<CartScreen> {
             children: [
               const Text(
                 'Total',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               Text(
-                'Rp${(_totalPrice + 15000).toStringAsFixed(0)}',
+                'Rp${(_selectedTotalPrice + 15000).toStringAsFixed(0)}',
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -617,22 +706,59 @@ class _CartScreenState extends State<CartScreen> {
         ],
       ),
       child: ElevatedButton(
-        onPressed: () {
-          // Navigate to checkout screen
-        },
+        onPressed:
+            _hasSelectedItems
+                ? () {
+                  // Make sure at least one item is selected
+                  if (_selectedItems.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Pilih setidaknya satu produk untuk checkout',
+                        ),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    return;
+                  }
+
+                  // Convert SELECTED cart items to JSON string and pass to checkout screen
+                  final cartItemsJson = jsonEncode(
+                    _selectedItems
+                        .map(
+                          (item) => {
+                            'id': item.id,
+                            'productId': item.productId,
+                            'productName': item.productName,
+                            'productPrice': item.productPrice,
+                            'productImage': item.productImage,
+                            'quantity': item.quantity,
+                          },
+                        )
+                        .toList(),
+                  );
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (context) => CheckoutScreen(
+                            cartItemsJson: cartItemsJson,
+                            subtotal: _selectedTotalPrice,
+                          ),
+                    ),
+                  );
+                }
+                : null,
         style: ElevatedButton.styleFrom(
           backgroundColor: AppTheme.primaryColor,
           padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          disabledBackgroundColor: Colors.grey,
         ),
-        child: const Text(
-          'Lanjutkan ke Pembayaran',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
+        child: Text(
+          'Checkout (${_selectedItems.length} Item)',
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
       ),
     );

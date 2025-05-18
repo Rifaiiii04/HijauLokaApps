@@ -6,7 +6,7 @@ header('Content-Type: application/json; charset=utf-8');
 // header('Access-Control-Allow-Headers: Content-Type');
 
 // Database connection
-$host = "localhost";
+$host = "103.247.11.220";
 $username = "hijc7862_admin";
 $password = "wyn[=?alPV%.";
 $database = "hijc7862_hijauloka";

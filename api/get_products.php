@@ -11,7 +11,7 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 // Database configuration
-$host = 'localhost';
+$host = '103.247.11.220';
 $dbname = 'hijc7862_hijauloka';
 $username = 'hijc7862_admin';
 $password = 'wyn[=?alPV%.';
