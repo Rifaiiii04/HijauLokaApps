@@ -57,7 +57,11 @@ class _BlogDetailScreenState extends State<BlogDetailScreen> {
     final isSmallScreen = size.width < 360;
 
     return Scaffold(
-      appBar: const AppHeader(title: 'Artikel', showBackButton: true),
+      appBar: const AppHeader(
+        title: 'Artikel',
+        showBackButton: true,
+        showCartIcon: false,
+      ),
       body:
           _isLoading
               ? const Center(child: CircularProgressIndicator())

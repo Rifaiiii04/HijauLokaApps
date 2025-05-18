@@ -52,7 +52,7 @@ class _BlogScreenState extends State<BlogScreen> {
     final isLargeScreen = size.width >= 600;
 
     return Scaffold(
-      appBar: const AppHeader(title: 'Blog', showBackButton: false),
+      appBar: const AppHeader(showBackButton: false),
       body:
           _isLoading
               ? const Center(child: CircularProgressIndicator())
