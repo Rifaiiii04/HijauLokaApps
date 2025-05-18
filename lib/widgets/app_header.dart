@@ -1,68 +1,70 @@
 import 'package:flutter/material.dart';
 import 'package:hijauloka/config/theme.dart';
+import 'package:hijauloka/screens/cart/cart_screen.dart';
 
 class AppHeader extends StatelessWidget implements PreferredSizeWidget {
   final String? title;
-  final bool centerTitle;
+  final bool showBackButton;
+  final bool showCartIcon;
   final List<Widget>? actions;
-  final bool showActionButtons;
-  
+
   const AppHeader({
-    super.key,
+    Key? key,
     this.title,
-    this.centerTitle = false,
+    this.showBackButton = true,
+    this.showCartIcon = true,
     this.actions,
-    this.showActionButtons = true,
-  });
+  }) : super(key: key);
+
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 
   @override
   Widget build(BuildContext context) {
     return AppBar(
       backgroundColor: Colors.white,
       elevation: 0,
-      leading: title == null ? Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Image.asset('assets/img/HijauLoklogo.png', 
-          errorBuilder: (context, error, stackTrace) => const Icon(
-            Icons.eco,
-            color: AppTheme.primaryColor,
-          ),
-        ),
-      ) : null,
-      title: title != null ? Text(
-        title!,
-        style: const TextStyle(
-          color: Colors.black,
-          fontWeight: FontWeight.bold,
-        ),
-      ) : null,
-      centerTitle: centerTitle,
-      actions: actions ?? (showActionButtons ? [
-        // Wishlist button
-        IconButton(
-          icon: const Icon(Icons.favorite_border, color: Colors.black54),
-          onPressed: () {
-            Navigator.pushNamed(context, '/wishlist');
-          },
-        ),
-        // Notification button
-        IconButton(
-          icon: const Icon(Icons.notifications_none, color: Colors.black54),
-          onPressed: () {
-            Navigator.pushNamed(context, '/notifications');
-          },
-        ),
-        // Cart button
-        IconButton(
-          icon: const Icon(Icons.shopping_cart_outlined, color: Colors.black54),
-          onPressed: () {
-            Navigator.pushNamed(context, '/cart');
-          },
-        ),
-      ] : null),
+      centerTitle: true,
+      title: title != null
+          ? Text(
+              title!,
+              style: const TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
+              ),
+            )
+          : Image.asset(
+              'assets/images/logo.png',
+              height: 30,
+              errorBuilder: (context, error, stackTrace) {
+                return const Text(
+                  'HijauLoka',
+                  style: TextStyle(
+                    color: AppTheme.primaryColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                );
+              },
+            ),
+      leading: showBackButton
+          ? IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.black),
+              onPressed: () => Navigator.pop(context),
+            )
+          : null,
+      actions: actions ??
+          [
+            if (showCartIcon)
+              IconButton(
+                icon: const Icon(Icons.shopping_cart_outlined, color: Colors.black),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const CartScreen()),
+                  );
+                },
+              ),
+          ],
     );
   }
-  
-  @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }

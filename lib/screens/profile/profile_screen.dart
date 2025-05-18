@@ -47,7 +47,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
 
     try {
-      final isLoggedIn = await _authService.isLoggedIn();
+      // Change from instance method to static method call
+      final isLoggedIn = await AuthService.isLoggedIn();
 
       if (isLoggedIn) {
         final user = await _authService.getCurrentUser();

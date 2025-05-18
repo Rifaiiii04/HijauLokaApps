@@ -10,6 +10,10 @@ class AuthService {
   // For storing user data
   static const String userKey = 'user_data';
   static const String tokenKey = 'auth_token';
+  // Add missing constants for user ID
+  static const String _userIdKey = 'user_id';
+  static const String _userNameKey = 'user_name';
+  static const String _userEmailKey = 'user_email';
 
   // Register user
   Future<Map<String, dynamic>> register(
@@ -67,6 +71,13 @@ class AuthService {
           await prefs.setString(tokenKey, data['token']);
         }
 
+        // Save user ID, name, and email separately for easier access
+        if (data['user'] != null) {
+          await prefs.setString(_userIdKey, data['user']['id_user'].toString());
+          await prefs.setString(_userNameKey, data['user']['nama'] ?? '');
+          await prefs.setString(_userEmailKey, data['user']['email'] ?? '');
+        }
+
         // Save login timestamp
         await prefs.setInt('last_login', DateTime.now().millisecondsSinceEpoch);
       }
@@ -79,9 +90,27 @@ class AuthService {
   }
 
   // Check if user is logged in
-  Future<bool> isLoggedIn() async {
+  static Future<bool> isLoggedIn() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.containsKey(userKey);
+    return prefs.containsKey(_userIdKey) && prefs.getString(_userIdKey) != null;
+  }
+
+  // Get user ID
+  static Future<String?> getUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_userIdKey);
+  }
+
+  // Get user name
+  static Future<String?> getUserName() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_userNameKey);
+  }
+
+  // Get user email
+  static Future<String?> getUserEmail() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_userEmailKey);
   }
 
   // Get current user
@@ -107,6 +136,9 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(userKey);
     await prefs.remove(tokenKey);
+    await prefs.remove(_userIdKey);
+    await prefs.remove(_userNameKey);
+    await prefs.remove(_userEmailKey);
   }
 
   // Get auth token

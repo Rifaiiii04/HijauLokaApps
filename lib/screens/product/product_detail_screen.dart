@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:hijauloka/config/theme.dart';
 import 'package:hijauloka/models/product.dart'; // Add this import
+import 'package:hijauloka/services/auth_service.dart'; // Add this import for AuthService
 
 class ProductDetail {
   final int id;
@@ -529,7 +530,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         children: [
           Expanded(
             child: OutlinedButton(
-              onPressed: () {},
+              onPressed: () {
+                _addToCart(); // Call the add to cart method
+              },
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 side: BorderSide(color: AppTheme.primaryColor),
@@ -567,6 +570,153 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           ),
         ],
       ),
+    );
+  }
+  
+  // Add this method to handle adding products to cart
+  Future<void> _addToCart() async {
+    // Check if user is logged in
+    final bool isLoggedIn = await AuthService.isLoggedIn();
+    
+    if (!isLoggedIn) {
+      // Show login dialog or navigate to login screen
+      _showLoginRequiredDialog();
+      return;
+    }
+    
+    // Get the user ID from AuthService
+    final String? userId = await AuthService.getUserId();
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Sesi login tidak valid, silakan login ulang'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+    
+    // Get product ID from the product detail
+    if (productDetail == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Detail produk tidak tersedia'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+    
+    // Fix: Access id_product directly from the Map
+    final productId = productDetail!['id_product'];
+    if (productId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('ID produk tidak valid'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+    
+    final int quantity = 1; // Default quantity
+    
+    setState(() {
+      isLoading = true;
+    });
+    
+    try {
+      print('Sending request with: userId=$userId, productId=$productId, quantity=$quantity');
+      
+      final requestBody = {
+        'id_user': userId,
+        'id_product': productId.toString(),
+        'jumlah': quantity.toString(),
+      };
+      print('Request body: $requestBody');
+      
+      final response = await http.post(
+        Uri.parse('https://admin.hijauloka.my.id/api/add_to_cart.php'),
+        body: requestBody,
+      ).timeout(const Duration(seconds: 15));
+      
+      print('Add to cart response body: ${response.body}');
+      
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        
+        if (data['success'] == true) {
+          // Show success message
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(data['message'] ?? 'Produk berhasil ditambahkan ke keranjang'),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        } else {
+          // Show error message with more details
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: ${data['message'] ?? 'Gagal menambahkan produk ke keranjang'}'),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      } else {
+        // Show error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Server error: ${response.statusCode}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error adding to cart: $e');
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+  
+  // Add this method to show login required dialog
+  void _showLoginRequiredDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Login Diperlukan'),
+          content: const Text('Anda harus login terlebih dahulu untuk menambahkan produk ke keranjang.'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Batal'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Login'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                // Navigate to login screen
+                Navigator.pushNamed(context, '/login');
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }
