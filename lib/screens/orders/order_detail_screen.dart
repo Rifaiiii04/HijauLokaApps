@@ -81,6 +81,31 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     }
   }
 
+  Future<void> _cancelOrder() async {
+    setState(() => _isLoading = true);
+    final result = await _orderService.updateOrderStatus(
+      widget.orderId,
+      'dibatalkan',
+    );
+    if (result['success'] == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Pesanan berhasil dibatalkan!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      await _loadOrderDetail();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['message'] ?? 'Gagal membatalkan pesanan'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      setState(() => _isLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -133,6 +158,18 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   Widget _buildOrderStatusCard() {
+    // Get status from stts_pemesanan field
+    final status = _order!.status.toLowerCase();
+    final statusColor = _getStatusColor(status);
+    final statusText = _getStatusText(status);
+    final statusDescription = _getStatusDescription(status);
+    
+    // Check if payment is needed based on stts_pembayaran
+    final needsPayment = _order!.paymentStatus == 'belum_dibayar';
+    
+    // Check if order can be cancelled
+    final canCancel = status == 'pending' || status == 'diproses';
+    
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -141,61 +178,189 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (status == 'selesai') ...[
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.green[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.green[200]!),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.green[100],
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.check_circle,
+                        color: Colors.green,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Pesanan Selesai',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Terima kasih telah berbelanja di HijauLoka!',
+                            style: TextStyle(
+                              color: Colors.green[700],
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
             Row(
               children: [
-                Icon(
-                  _getStatusIcon(_order!.status),
-                  color: Color(
-                    int.parse('0xFF${_order!.statusColor.substring(1)}'),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: statusColor.withOpacity(0.1),
+                    shape: BoxShape.circle,
                   ),
-                  size: 24,
+                  child: Icon(
+                    _getStatusIcon(status),
+                    color: statusColor,
+                    size: 24,
+                  ),
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  _order!.statusText,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Color(
-                      int.parse('0xFF${_order!.statusColor.substring(1)}'),
-                    ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        statusText,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: statusColor,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        statusDescription,
+                        style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              _getStatusDescription(_order!.status),
-              style: TextStyle(color: Colors.grey[600]),
-            ),
-            if (_order!.needsPayment) ...[
+            if (needsPayment) ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.amber[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.amber[200]!),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.payment, color: Colors.amber, size: 24),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Pembayaran Belum Dilakukan',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.amber,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Silakan selesaikan pembayaran untuk melanjutkan proses pesanan',
+                            style: TextStyle(
+                              color: Colors.amber[700],
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
+                child: ElevatedButton.icon(
                   onPressed: _launchPaymentUrl,
+                  icon: const Icon(Icons.payment, color: Colors.white),
+                  label: const Text('Bayar Sekarang'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primaryColor,
                     padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
-                  child: const Text('Bayar Sekarang'),
                 ),
               ),
             ],
-            if (_order!.canCancel) ...[
+            if (canCancel) ...[
               const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: () {
-                    // TODO: Implement cancel order
+                child: OutlinedButton.icon(
+                  onPressed: () async {
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder:
+                          (context) => AlertDialog(
+                            title: const Text('Batalkan Pesanan'),
+                            content: const Text(
+                              'Apakah Anda yakin ingin membatalkan pesanan ini?',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text('Tidak'),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                child: const Text('Ya'),
+                              ),
+                            ],
+                          ),
+                    );
+                    if (confirm == true) {
+                      await _cancelOrder();
+                    }
                   },
+                  icon: const Icon(Icons.cancel_outlined, color: Colors.red),
+                  label: const Text('Batalkan Pesanan'),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: Colors.red),
                     foregroundColor: Colors.red,
                     padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
-                  child: const Text('Batalkan Pesanan'),
                 ),
               ),
             ],
@@ -221,7 +386,11 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             const SizedBox(height: 16),
             _buildInfoRow('ID Pesanan', _order!.orderId),
             const Divider(height: 16),
-            _buildInfoRow('Tanggal Pemesanan', _order!.formattedDate),
+            _buildInfoRow('Tanggal Pemesanan', 
+              DateFormat('dd MMM yyyy HH:mm').format(
+                DateTime.parse(_order!.orderDate)
+              )
+            ),
             const Divider(height: 16),
             _buildInfoRow(
               'Metode Pengiriman',
@@ -277,6 +446,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   Widget _buildOrderItemsCard() {
+    // Since we don't have order items anymore, we'll show a message
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -286,16 +456,45 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Daftar Produk',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              'Detail Pesanan',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 16),
-            for (var item in _order!.items) _buildOrderItemRow(item),
-            const Divider(height: 32),
-            _buildPriceRow('Subtotal', _order!.subtotal),
-            _buildPriceRow('Biaya Pengiriman', _order!.shippingCost),
-            const SizedBox(height: 8),
-            _buildPriceRow('Total', _order!.total, isTotal: true),
+            // Show a message that items are not available
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text(
+                  'Detail item pesanan tidak tersedia',
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            ),
+            const Divider(),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Total Pesanan',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  'Rp${_order!.total.toStringAsFixed(0)}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.primaryColor,
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
@@ -303,6 +502,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   Widget _buildPaymentDetailsCard() {
+    final paymentStatus = _order!.paymentStatus == 'lunas' 
+        ? 'Lunas' 
+        : 'Menunggu Pembayaran';
+        
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -323,7 +526,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             const Divider(height: 16),
             _buildInfoRow(
               'Status Pembayaran',
-              _order!.needsPayment ? 'Menunggu Pembayaran' : 'Lunas',
+              paymentStatus,
             ),
             if (_order!.paymentMethod == 'cod') ...[
               const Divider(height: 16),
@@ -522,90 +725,5 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       default:
         return method;
     }
-  }
-}
-
-class OrderDetail {
-  final String orderId;
-  final DateTime orderDate;
-  final String status;
-  final String recipientName;
-  final String phone;
-  final String address;
-  final String detailAddress;
-  final String shippingMethod;
-  final String paymentMethod;
-  final double subtotal;
-  final double shippingCost;
-  final double total;
-  final List<OrderItem> items;
-  final String? paymentUrl;
-
-  OrderDetail({
-    required this.orderId,
-    required this.orderDate,
-    required this.status,
-    required this.recipientName,
-    required this.phone,
-    required this.address,
-    required this.detailAddress,
-    required this.shippingMethod,
-    required this.paymentMethod,
-    required this.subtotal,
-    required this.shippingCost,
-    required this.total,
-    required this.items,
-    this.paymentUrl,
-  });
-
-  factory OrderDetail.fromJson(Map<String, dynamic> json) {
-    return OrderDetail(
-      orderId: json['order_id'] ?? '',
-      orderDate: DateTime.parse(
-        json['created_at'] ?? DateTime.now().toString(),
-      ),
-      status: json['status'] ?? 'pending',
-      recipientName: json['recipient_name'] ?? '',
-      phone: json['phone'] ?? '',
-      address: json['address'] ?? '',
-      detailAddress: json['detail_address'] ?? '',
-      shippingMethod: json['shipping_method'] ?? '',
-      paymentMethod: json['payment_method'] ?? '',
-      subtotal: double.parse(json['subtotal']?.toString() ?? '0'),
-      shippingCost: double.parse(json['shipping_cost']?.toString() ?? '0'),
-      total: double.parse(json['total']?.toString() ?? '0'),
-      paymentUrl: json['payment_url'],
-      items:
-          (json['items'] as List<dynamic>?)
-              ?.map((item) => OrderItem.fromJson(item))
-              .toList() ??
-          [],
-    );
-  }
-}
-
-class OrderItem {
-  final int productId;
-  final String productName;
-  final String productImage;
-  final double price;
-  final int quantity;
-
-  OrderItem({
-    required this.productId,
-    required this.productName,
-    required this.productImage,
-    required this.price,
-    required this.quantity,
-  });
-
-  factory OrderItem.fromJson(Map<String, dynamic> json) {
-    return OrderItem(
-      productId: int.parse(json['product_id']?.toString() ?? '0'),
-      productName: json['product_name'] ?? '',
-      productImage: json['product_image'] ?? '',
-      price: double.parse(json['price']?.toString() ?? '0'),
-      quantity: int.parse(json['quantity']?.toString() ?? '0'),
-    );
   }
 }

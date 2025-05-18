@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:http/http.dart' as http;
 import 'package:hijauloka/models/cart_item.dart';
 import 'package:hijauloka/services/auth_service.dart';
@@ -160,16 +161,25 @@ class OrderService {
   // Get order details
   Future<Map<String, dynamic>> getOrderDetails(String orderId) async {
     try {
+      if (orderId.isEmpty) {
+        return {'success': false, 'message': 'Order ID cannot be empty'};
+      }
+      
+      print('Fetching order details for ID: $orderId');
+      
       final user = await _authService.getCurrentUser();
       String userId = user?.id.toString() ?? "";
 
       final response = await http
           .get(
             Uri.parse(
-              '$baseUrl/order/get_order_detail.php?order_id=${orderId.toString()}&user_id=$userId',
+              '$baseUrl/order/get_order_detail.php?order_id=$orderId',
             ),
           )
           .timeout(const Duration(seconds: 15));
+
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
 
       if (response.statusCode != 200) {
         return {
@@ -183,8 +193,28 @@ class OrderService {
       // Defensive: check if response is valid JSON
       try {
         final Map<String, dynamic> data = jsonDecode(response.body);
+        
+        // If the API returns success: false, pass that through
+        if (data['success'] == false) {
+          return data;
+        }
+        
+        // Otherwise, transform the data to match our expected structure
+        if (data['success'] == true && data.containsKey('data')) {
+          // Map database field names to our expected structure
+          final orderData = data['data'];
+          
+          // Add any necessary transformations here
+          
+          return {
+            'success': true,
+            'data': orderData
+          };
+        }
+        
         return data;
       } catch (e) {
+        print('JSON decode error: $e');
         return {
           'success': false,
           'message': 'Server returned invalid data (not JSON).',
@@ -216,7 +246,7 @@ class OrderService {
     return '${date.day} ${months[date.month - 1]} ${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
   }
 
-  // Get user orders
+  // Get user orders - KEEP THIS IMPLEMENTATION, REMOVE THE OTHER ONE
   Future<Map<String, dynamic>> getUserOrders({
     String status = '',
     int page = 1,
@@ -235,9 +265,17 @@ class OrderService {
         url += '&status=$status';
       }
 
+      print('Fetching orders from URL: $url');
       final response = await http
           .get(Uri.parse(url))
           .timeout(const Duration(seconds: 15));
+
+      print('Response status code: ${response.statusCode}');
+      if (response.body.isNotEmpty) {
+        print('Response body preview: ${response.body.substring(0, min(100, response.body.length))}...');
+      } else {
+        print('Response body is empty');
+      }
 
       if (response.statusCode != 200) {
         return {
@@ -247,7 +285,19 @@ class OrderService {
         };
       }
 
-      return jsonDecode(response.body);
+      // Safely try to parse the JSON
+      try {
+        final Map<String, dynamic> data = jsonDecode(response.body);
+        return data;
+      } catch (e) {
+        print('Error parsing JSON response: $e');
+        print('Response body: ${response.body}');
+        return {
+          'success': false,
+          'message': 'Server returned invalid data (not JSON)',
+          'error': e.toString(),
+        };
+      }
     } catch (e) {
       print('Error fetching user orders: $e');
       return {'success': false, 'message': 'Error connecting to server: $e'};
@@ -303,6 +353,38 @@ class OrderService {
       }
     } catch (e) {
       return {'success': false, 'message': 'Error getting payment URL: $e'};
+    }
+  }
+
+  Future<Map<String, dynamic>> getOrderCounts() async {
+    try {
+      final userId = await AuthService.getUserId();
+      if (userId == null) {
+        return {'success': false, 'message': 'User not logged in'};
+      }
+
+      final response = await http
+          .get(
+            Uri.parse(
+              '$baseUrl/order/get_order_counts.php?user_id=$userId',
+            ),
+          )
+          .timeout(const Duration(seconds: 15));
+
+      print('Order counts response: ${response.statusCode} - ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return data;
+      } else {
+        return {
+          'success': false,
+          'message': 'Server error: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      print('Error getting order counts: $e');
+      return {'success': false, 'message': 'Connection error: $e'};
     }
   }
 }

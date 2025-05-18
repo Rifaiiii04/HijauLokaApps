@@ -1,8 +1,11 @@
 <?php
-ini_set('display_errors', 1);
+ini_set('display_errors', 0); // Disable error display in production
 error_reporting(E_ALL);
 
 header('Content-Type: application/json; charset=utf-8');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type');
 
 // Handle preflight OPTIONS request
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -88,7 +91,9 @@ try {
                 o.ongkir as shipping_cost,
                 o.tgl_selesai,
                 o.tgl_dikirim,
+                o.tgl_batal,
                 o.id_admin,
+                o.midtrans_order_id,
                 u.nama as user_name,
                 u.email as user_email,
                 u.no_tlp as user_phone,
@@ -110,49 +115,93 @@ try {
     
     $order = $result->fetch_assoc();
     
+    // Get shipping address
+    $addressSql = "SELECT 
+                    sa.id_address,
+                    sa.recipient_name,
+                    sa.phone,
+                    sa.address_label,
+                    sa.address,
+                    sa.rt,
+                    sa.rw,
+                    sa.house_number,
+                    sa.postal_code,
+                    sa.detail_address
+                FROM shipping_address sa
+                JOIN order_shipping_address osa ON sa.id_address = osa.id_address
+                WHERE osa.id_order = ?";
+    $addressStmt = $conn->prepare($addressSql);
+    $addressStmt->bind_param("i", $order['id_order']);
+    $addressStmt->execute();
+    $addressResult = $addressStmt->get_result();
+    
+    $shippingAddress = null;
+    if ($addressResult->num_rows > 0) {
+        $shippingAddress = $addressResult->fetch_assoc();
+        $shippingAddress['full_address'] = buildFullAddress($shippingAddress);
+    }
+    
     // Get order items
     $itemsSql = "SELECT 
-                    d.id_detail_order,
-                    d.id_order,
-                    d.id_product,
-                    d.jumlah,
-                    d.harga_satuan,
+                    do.id_detail_order,
+                    do.id_order,
+                    do.id_product,
+                    do.jumlah,
+                    do.harga_satuan,
                     p.nama_product,
-                    p.gambar
-                FROM detail_order d
-                LEFT JOIN product p ON d.id_product = p.id_product
-                WHERE d.id_order = ?";
+                    p.deskripsi,
+                    p.gambar_url
+                FROM detail_order do
+                LEFT JOIN product p ON do.id_product = p.id_product
+                WHERE do.id_order = ?";
     $itemsStmt = $conn->prepare($itemsSql);
     $itemsStmt->bind_param("i", $order['id_order']);
     $itemsStmt->execute();
     $itemsResult = $itemsStmt->get_result();
     
-    $items = [];
+    $orderItems = [];
     $subtotal = 0;
     
     while ($item = $itemsResult->fetch_assoc()) {
-        // Calculate item total
-        $itemTotal = $item['jumlah'] * $item['harga_satuan'];
+        $itemTotal = (float)$item['harga_satuan'] * (int)$item['jumlah'];
         $subtotal += $itemTotal;
         
-        // Set image URL
-        $imageUrl = 'https://admin.hijauloka.my.id/assets/images/products/' . $item['gambar'];
-        
-        $items[] = [
+        $orderItems[] = [
             'id' => $item['id_detail_order'],
-            'order_id' => $item['id_order'],
             'product_id' => $item['id_product'],
-            'quantity' => $item['jumlah'],
-            'price' => $item['harga_satuan'],
-            'total' => $itemTotal,
-            'product_name' => $item['nama_product'],
-            'product_image' => $imageUrl
+            'product_name' => $item['nama_product'] ?? 'Unknown Product',
+            'description' => $item['deskripsi'] ?? '',
+            'image_url' => $item['gambar_url'] ?? '',
+            'quantity' => (int)$item['jumlah'],
+            'price' => (float)$item['harga_satuan'],
+            'total' => $itemTotal
         ];
     }
     
-    // Format order date
+    // Format dates
     $orderDate = new DateTime($order['tgl_pemesanan']);
-    $formattedDate = $orderDate->format('d M Y H:i');
+    $formattedOrderDate = $orderDate->format('d M Y H:i');
+    
+    $completedDate = null;
+    if (!empty($order['tgl_selesai'])) {
+        $completedDate = new DateTime($order['tgl_selesai']);
+        $completedDate = $completedDate->format('d M Y H:i');
+    }
+    
+    $shippedDate = null;
+    if (!empty($order['tgl_dikirim'])) {
+        $shippedDate = new DateTime($order['tgl_dikirim']);
+        $shippedDate = $shippedDate->format('d M Y H:i');
+    }
+    
+    $cancelledDate = null;
+    if (!empty($order['tgl_batal'])) {
+        $cancelledDate = new DateTime($order['tgl_batal']);
+        $cancelledDate = $cancelledDate->format('d M Y H:i');
+    }
+    
+    // Determine if order can be cancelled
+    $canCancel = ($order['status'] == 'pending' || $order['status'] == 'diproses');
     
     // Determine status color and text
     $statusColor = '#28a745'; // Default green
@@ -181,57 +230,40 @@ try {
             break;
     }
     
-    // Add payment URL if needed
-    $paymentUrl = null;
-    if ($order['metode_pembayaran'] === 'midtrans' && $order['stts_pembayaran'] === 'belum_dibayar') {
-        $paymentUrl = 'https://admin.hijauloka.my.id/api/order/payment.php?order_id=' . $order['order_id'];
-    }
-    
-    // Format order details for response
-    $orderDetails = [
-        'id' => $order['id_order'],
-        'order_id' => $order['order_id'],
-        'user_id' => $order['id_user'],
-        'user_name' => $order['user_name'],
-        'user_email' => $order['user_email'],
-        'user_phone' => $order['user_phone'] ?? '',
-        'admin_id' => $order['id_admin'],
-        'admin_name' => $order['admin_name'] ?? 'Admin',
-        'date' => $order['tgl_pemesanan'],
-        'formatted_date' => $formattedDate,
-        'status' => $order['status'],
-        'status_text' => $statusText,
-        'status_color' => $statusColor,
-        'payment_status' => $order['stts_pembayaran'],
-        'payment_method' => $order['metode_pembayaran'],
-        'shipping_method' => $order['shipping_method'],
-        'shipping_cost' => (float)$order['shipping_cost'],
-        'subtotal' => $subtotal,
-        'total' => (float)$order['total_harga'],
-        'needs_payment' => ($order['stts_pembayaran'] === 'belum_dibayar'),
-        'can_cancel' => ($order['status'] === 'pending' || $order['status'] === 'diproses'),
-        'payment_url' => $paymentUrl,
-        'items' => $items,
-        'shipping_address' => [
-            'id' => $order['shipping_address_id'],
-            'recipient_name' => $order['recipient_name'],
-            'phone' => $order['phone'],
-            'address' => $order['address'],
-            'postal_code' => $order['postal_code'],
-            'rt' => $order['rt'] ?? '',
-            'rw' => $order['rw'] ?? '',
-            'house_number' => $order['house_number'] ?? '',
-            'detail_address' => $order['detail_address'] ?? '',
-            'full_address' => buildFullAddress($order)
+    // Prepare response data
+    $responseData = [
+        'success' => true,
+        'data' => [
+            'id' => $order['id_order'],
+            'order_id' => $order['order_id'],
+            'user_id' => $order['id_user'],
+            'user_name' => $order['user_name'],
+            'user_email' => $order['user_email'],
+            'user_phone' => $order['user_phone'],
+            'order_date' => $order['tgl_pemesanan'],
+            'formatted_date' => $formattedOrderDate,
+            'status' => $order['status'],
+            'status_text' => $statusText,
+            'status_color' => $statusColor,
+            'payment_status' => $order['stts_pembayaran'],
+            'payment_method' => $order['metode_pembayaran'],
+            'shipping_method' => $order['shipping_method'],
+            'shipping_cost' => (float)$order['shipping_cost'],
+            'subtotal' => $subtotal,
+            'total' => (float)$order['total_harga'],
+            'completed_date' => $completedDate,
+            'shipped_date' => $shippedDate,
+            'cancelled_date' => $cancelledDate,
+            'admin_id' => $order['id_admin'],
+            'admin_name' => $order['admin_name'],
+            'midtrans_order_id' => $order['midtrans_order_id'],
+            'can_cancel' => $canCancel,
+            'shipping_address' => $shippingAddress,
+            'items' => $orderItems
         ]
     ];
     
-    // Return order details
-    echo json_encode([
-        'success' => true,
-        'message' => 'Order details retrieved successfully',
-        'data' => $orderDetails
-    ]);
+    echo json_encode($responseData);
     
 } catch (Exception $e) {
     // Log the error
@@ -239,12 +271,11 @@ try {
     
     echo json_encode([
         'success' => false,
-        'message' => 'Error retrieving order details: ' . $e->getMessage()
+        'message' => 'An error occurred while processing your request',
+        'error' => $e->getMessage()
     ]);
 }
 
-// Close connection
-if (isset($conn) && $conn !== null) {
-    $conn->close();
-}
+// Always close the connection
+$conn->close();
 ?>

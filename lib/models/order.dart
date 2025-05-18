@@ -2,227 +2,117 @@ import 'package:hijauloka/models/cart_item.dart';
 import 'package:intl/intl.dart';
 
 class Order {
+  final int id;
   final String orderId;
-  final String userId;
-  final String recipientName;
-  final String phone;
-  final String address;
-  final String detailAddress;
-  final String paymentMethod;
-  final String shippingMethod;
-  final double subtotal;
-  final double shippingCost;
-  final double total;
-  final String status;
-  final String createdAt;
-  final List<CartItem> items;
+  final int userId;
+  final String orderDate;  // tgl_pemesanan
+  final String status;     // stts_pemesanan
+  final double total;      // total_harga
+  final String? completedDate; // tgl_selesai
+  final String? shippedDate;   // tgl_dikirim
+  final String? cancelledDate;  // tgl_batal
+  final int adminId;
+  final String paymentStatus;   // stts_pembayaran
+  final String paymentMethod;   // metode_pembayaran
+  final String shippingMethod;  // kurir
+  final double shippingCost;    // ongkir
+  final String? midtransOrderId;
+  
+  // Additional fields for UI
+  final String? userName;
+  final String? userEmail;
+  final String? userPhone;
+  final String? adminName;
   final String? paymentUrl;
+  final Map<String, dynamic>? shippingAddress;
 
   Order({
+    required this.id,
     required this.orderId,
     required this.userId,
-    required this.recipientName,
-    required this.phone,
-    required this.address,
-    required this.detailAddress,
+    required this.orderDate,
+    required this.status,
+    required this.total,
+    this.completedDate,
+    this.shippedDate,
+    this.cancelledDate,
+    required this.adminId,
+    required this.paymentStatus,
     required this.paymentMethod,
     required this.shippingMethod,
-    required this.subtotal,
     required this.shippingCost,
-    required this.total,
-    required this.status,
-    required this.createdAt,
-    required this.items,
+    this.midtransOrderId,
+    this.userName,
+    this.userEmail,
+    this.userPhone,
+    this.adminName,
     this.paymentUrl,
+    this.shippingAddress,
   });
 
   factory Order.fromJson(Map<String, dynamic> json) {
-    List<CartItem> orderItems = [];
-    if (json['items'] != null) {
-      orderItems = List<CartItem>.from(
-        (json['items'] as List).map(
-          (item) => CartItem(
-            id:
-                int.tryParse(
-                  item['id']?.toString() ??
-                      item['id_product']?.toString() ??
-                      '0',
-                ) ??
-                0,
-            productId:
-                int.tryParse(
-                  item['product_id']?.toString() ??
-                      item['id_product']?.toString() ??
-                      '0',
-                ) ??
-                0,
-            productName: item['product_name'] ?? '',
-            productPrice:
-                double.tryParse(item['price']?.toString() ?? '0') ?? 0,
-            productImage: item['product_image'] ?? '',
-            quantity: int.tryParse(item['quantity']?.toString() ?? '0') ?? 0,
-          ),
-        ),
-      );
-    }
-
-    // Handle potentially different field names from API vs offline mode
-    final shippingAddress =
-        json['shipping_address'] as Map<String, dynamic>? ?? {};
-
     return Order(
-      orderId: json['order_id'] ?? '',
-      userId: json['user_id']?.toString() ?? '',
-      recipientName:
-          shippingAddress['recipient_name'] ??
-          json['recipient_name'] ??
-          json['user_name'] ??
-          '',
-      phone:
-          shippingAddress['phone'] ?? json['phone'] ?? json['user_phone'] ?? '',
-      address: shippingAddress['address'] ?? json['address'] ?? '',
-      detailAddress:
-          shippingAddress['detail_address'] ?? json['detail_address'] ?? '',
-      paymentMethod: json['payment_method'] ?? '',
-      shippingMethod: json['shipping_method'] ?? '',
-      subtotal: double.tryParse(json['subtotal']?.toString() ?? '0') ?? 0,
-      shippingCost:
-          double.tryParse(json['shipping_cost']?.toString() ?? '0') ?? 0,
-      total: double.tryParse(json['total']?.toString() ?? '0') ?? 0,
-      status: json['status'] ?? '',
-      createdAt:
-          json['date'] ?? json['created_at'] ?? DateTime.now().toString(),
-      items: orderItems,
+      id: json['id_order'] ?? 0,
+      orderId: json['order_id'] ?? json['id_order']?.toString() ?? '',
+      userId: json['id_user'] ?? 0,
+      orderDate: json['tgl_pemesanan'] ?? '',
+      status: json['stts_pemesanan'] ?? json['status'] ?? '',
+      total: (json['total_harga'] is num) 
+          ? (json['total_harga'] as num).toDouble() 
+          : double.tryParse(json['total_harga']?.toString() ?? '0') ?? 0,
+      completedDate: json['tgl_selesai'],
+      shippedDate: json['tgl_dikirim'],
+      cancelledDate: json['tgl_batal'],
+      adminId: json['id_admin'] ?? 0,
+      paymentStatus: json['stts_pembayaran'] ?? '',
+      paymentMethod: json['metode_pembayaran'] ?? '',
+      shippingMethod: json['kurir'] ?? '',
+      shippingCost: (json['ongkir'] is num) 
+          ? (json['ongkir'] as num).toDouble() 
+          : double.tryParse(json['ongkir']?.toString() ?? '0') ?? 0,
+      midtransOrderId: json['midtrans_order_id'],
+      userName: json['user_name'],
+      userEmail: json['user_email'],
+      userPhone: json['user_phone'],
+      adminName: json['admin_name'],
       paymentUrl: json['payment_url'],
+      shippingAddress: json['shipping_address'],
     );
   }
-
-  DateTime get orderDate => DateTime.tryParse(createdAt) ?? DateTime.now();
-
-  String get formattedDate {
-    // Check if we already have a formatted date from the API
-    if (createdAt.contains('Jan') ||
-        createdAt.contains('Feb') ||
-        createdAt.contains('Mar') ||
-        createdAt.contains('Apr') ||
-        createdAt.contains('May') ||
-        createdAt.contains('Jun') ||
-        createdAt.contains('Jul') ||
-        createdAt.contains('Aug') ||
-        createdAt.contains('Sep') ||
-        createdAt.contains('Oct') ||
-        createdAt.contains('Nov') ||
-        createdAt.contains('Dec')) {
-      return createdAt;
-    }
-
-    final dateFormat = DateFormat('dd MMMM yyyy, HH:mm');
-    return dateFormat.format(orderDate);
-  }
-
-  String get statusText {
-    // If we already have a statusText from API, use it
-    if (status.contains('Menunggu') ||
-        status.contains('Diproses') ||
-        status.contains('Dikirim') ||
-        status.contains('Selesai') ||
-        status.contains('Dibatalkan')) {
-      return status;
-    }
-
-    switch (status) {
-      case 'pending':
-        return 'Menunggu Pembayaran';
-      case 'diproses':
-      case 'processing':
-        return 'Diproses';
-      case 'dikirim':
-      case 'shipped':
-        return 'Dikirim';
-      case 'terkirim':
-      case 'delivered':
-        return 'Terkirim';
-      case 'selesai':
-      case 'completed':
-        return 'Selesai';
-      case 'dibatalkan':
-      case 'cancelled':
-        return 'Dibatalkan';
-      default:
-        return status;
+  
+  // Helper getters for UI
+  bool get needsPayment => paymentStatus == 'belum_dibayar';
+  bool get canCancel => status == 'pending' || status == 'diproses';
+  
+  String get statusText => _getStatusText(status);
+  String get statusColor => _getStatusColor(status);
+  
+  String _getStatusText(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending': return 'Menunggu Pembayaran';
+      case 'diproses': return 'Diproses';
+      case 'dikirim': return 'Dikirim';
+      case 'selesai': return 'Diterima';
+      case 'dibatalkan': return 'Dibatalkan';
+      default: return 'Unknown';
     }
   }
-
-  String get statusColor {
-    switch (status) {
-      case 'pending':
-        return '#FFC107'; // Amber
-      case 'diproses':
-      case 'processing':
-        return '#2196F3'; // Blue
-      case 'dikirim':
-      case 'shipped':
-        return '#673AB7'; // Deep Purple
-      case 'terkirim':
-      case 'delivered':
-        return '#4CAF50'; // Green
-      case 'selesai':
-      case 'completed':
-        return '#009688'; // Teal
-      case 'dibatalkan':
-      case 'cancelled':
-        return '#F44336'; // Red
-      default:
-        return '#9E9E9E'; // Grey
+  
+  String _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending': return '#FFC107';  // Orange
+      case 'diproses': return '#2196F3'; // Blue
+      case 'dikirim': return '#3F51B5';  // Indigo
+      case 'selesai': return '#4CAF50';  // Green
+      case 'dibatalkan': return '#F44336'; // Red
+      default: return '#9E9E9E';  // Grey
     }
   }
-
-  bool get canCancel {
-    return status == 'pending' || status == 'processing';
-  }
-
-  bool get canTrack {
-    return status == 'shipped' || status == 'delivered';
-  }
-
-  bool get canReview {
-    return status == 'delivered' || status == 'completed';
-  }
-
-  bool get needsPayment {
-    return status == 'pending' &&
-        paymentMethod == 'midtrans' &&
-        paymentUrl != null;
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'order_id': orderId,
-      'id_user': userId,
-      'recipient_name': recipientName,
-      'phone': phone,
-      'address': address,
-      'detail_address': detailAddress,
-      'payment_method': paymentMethod,
-      'shipping_method': shippingMethod,
-      'subtotal': subtotal,
-      'shipping_cost': shippingCost,
-      'total': total,
-      'status': status,
-      'created_at': createdAt,
-      'items':
-          items
-              .map(
-                (item) => {
-                  'id_product': item.productId,
-                  'quantity': item.quantity,
-                  'price': item.productPrice,
-                  'product_name': item.productName,
-                  'product_image': item.productImage,
-                },
-              )
-              .toList(),
-      'payment_url': paymentUrl,
-    };
-  }
+  
+  // Shipping address getters
+  String get recipientName => shippingAddress?['recipient_name'] ?? 'N/A';
+  String get phone => shippingAddress?['phone'] ?? 'N/A';
+  String get address => shippingAddress?['full_address'] ?? 
+                        shippingAddress?['address'] ?? 'N/A';
+  String get detailAddress => shippingAddress?['detail_address'] ?? '';
 }

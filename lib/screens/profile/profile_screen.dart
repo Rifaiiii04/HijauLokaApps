@@ -4,6 +4,7 @@ import 'package:hijauloka/models/shipping_address.dart';
 import 'package:hijauloka/models/user.dart';
 import 'package:hijauloka/services/address_service.dart';
 import 'package:hijauloka/services/auth_service.dart';
+import 'package:hijauloka/services/order_service.dart';
 import 'package:hijauloka/widgets/app_header.dart';
 import 'package:hijauloka/screens/profile/widgets/profile_card.dart';
 import 'package:hijauloka/screens/profile/widgets/order_status_section.dart';
@@ -21,9 +22,16 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final AuthService _authService = AuthService();
   final AddressService _addressService = AddressService();
+  final OrderService _orderService = OrderService();
 
   User? _user;
   List<ShippingAddress> _addresses = [];
+  Map<String, int> _orderCounts = {
+    'pending': 0,
+    'processing': 0,
+    'shipped': 0,
+    'delivered': 0,
+  };
   bool _isLoading = true;
   String? _errorMessage;
 
@@ -57,9 +65,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         if (user != null) {
           try {
             addresses = await _addressService.getShippingAddresses();
+            // Fetch order counts
+            final orderCounts = await _orderService.getOrderCounts();
+            if (orderCounts['success'] == true) {
+              _orderCounts = Map<String, int>.from(orderCounts['data'] ?? {});
+            }
             print("User logged in: ${user.name}"); // Debug print
           } catch (e) {
-            print("Error fetching addresses: $e");
+            print("Error fetching data: $e");
             addresses = [];
           }
         } else {
@@ -196,7 +209,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ProfileCard(user: _user!),
 
               // Order Status
-              const OrderStatusSection(),
+              OrderStatusSection(orderCounts: _orderCounts),
 
               // Main Address
               MainAddressSection(user: _user!),

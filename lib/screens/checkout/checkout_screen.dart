@@ -293,54 +293,145 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       context: context,
       barrierDismissible: false,
       builder:
-          (context) => AlertDialog(
-            title: const Text('Pesanan Berhasil'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.check_circle,
-                  color: AppTheme.primaryColor,
-                  size: 64,
-                ),
-                const SizedBox(height: 16),
-                Text('Order ID: $orderId'),
-                const SizedBox(height: 8),
-                const Text(
-                  'Terima kasih telah berbelanja di HijauLoka!',
-                  textAlign: TextAlign.center,
-                ),
-              ],
+          (context) => Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
             ),
-            actions: [
-              if (paymentUrl != null)
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    _launchPaymentUrl(orderId, paymentUrl);
-                  },
-                  child: const Text('Bayar Sekarang'),
-                ),
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => OrderDetailScreen(orderId: orderId),
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.green[50],
+                      shape: BoxShape.circle,
                     ),
-                  );
-                },
-                child: const Text('Lihat Detail Pesanan'),
+                    child: const Icon(
+                      Icons.check_circle,
+                      color: AppTheme.primaryColor,
+                      size: 64,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Pesanan Berhasil!',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.primaryColor,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.receipt_long, color: Colors.grey),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Order ID: $orderId',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Terima kasih telah berbelanja di HijauLoka!',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 24),
+                  if (paymentUrl != null) ...[
+                    Container(
+                      width: double.infinity,
+                      margin: const EdgeInsets.only(bottom: 12),
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          _launchPaymentUrl(orderId, paymentUrl);
+                        },
+                        icon: const Icon(Icons.payment, color: Colors.white),
+                        label: const Text(
+                          'Bayar Sekarang',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primaryColor,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                  Container(
+                    width: double.infinity,
+                    margin: const EdgeInsets.only(bottom: 12),
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) =>
+                                    OrderDetailScreen(orderId: orderId),
+                          ),
+                        );
+                      },
+                      icon: const Icon(
+                        Icons.visibility,
+                        color: AppTheme.primaryColor,
+                      ),
+                      label: const Text(
+                        'Lihat Detail Pesanan',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppTheme.primaryColor,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        side: const BorderSide(color: AppTheme.primaryColor),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+                  ),
+                  TextButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).popUntil((route) => route.isFirst);
+                    },
+                    icon: const Icon(Icons.home, color: Colors.grey),
+                    label: const Text(
+                      'Kembali ke Beranda',
+                      style: TextStyle(fontSize: 16, color: Colors.grey),
+                    ),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                  ),
+                ],
               ),
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  Navigator.of(context).popUntil((route) => route.isFirst);
-                },
-                child: const Text('Kembali ke Beranda'),
-              ),
-            ],
+            ),
           ),
     );
   }
