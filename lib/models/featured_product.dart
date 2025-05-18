@@ -1,46 +1,43 @@
 class FeaturedProduct {
-  final int idProduct;
-  final String namaProduct;
-  final String deskProduct;
-  final double harga;
-  final int stok;
-  final int? idKategori;
-  final String gambar;
+  final String? id_product;
+  final String? nama_product; // Changed from namaProduct to match API
+  final double? harga;
+  final String? desk_product; // Changed from deskripsi to match API
+  final String? gambar;
+  final String? nama_kategori; // Changed from kategori to match API
   final double? rating;
-  final int idAdmin;
-  final String? caraRawatVideo;
+  final int? stok;
+  final String? id_kategori; // Added missing field
 
   FeaturedProduct({
-    required this.idProduct,
-    required this.namaProduct,
-    required this.deskProduct,
-    required this.harga,
-    required this.stok,
-    required this.idKategori,
-    required this.gambar,
-    required this.rating,
-    required this.idAdmin,
-    required this.caraRawatVideo,
+    this.id_product,
+    this.nama_product,
+    this.harga,
+    this.desk_product,
+    this.gambar,
+    this.nama_kategori,
+    this.rating,
+    this.stok,
+    this.id_kategori,
   });
 
   factory FeaturedProduct.fromJson(Map<String, dynamic> json) {
     return FeaturedProduct(
-      idProduct: int.parse(json['id_product'].toString()),
-      namaProduct: json['nama_product'],
-      deskProduct: json['desk_product'],
-      harga: double.parse(json['harga'].toString()),
-      stok: int.parse(json['stok'].toString()),
-      idKategori:
-          json['id_kategori'] != null
-              ? int.tryParse(json['id_kategori'].toString())
-              : null,
+      id_product: json['id_product'],
+      nama_product: json['nama_product'],
+      harga:
+          json['harga'] != null
+              ? double.tryParse(json['harga'].toString()) ?? 0.0
+              : 0.0,
+      desk_product: json['desk_product'],
       gambar: json['gambar'],
+      nama_kategori: json['nama_kategori'],
       rating:
           json['rating'] != null
-              ? double.tryParse(json['rating'].toString())
-              : null,
-      idAdmin: int.parse(json['id_admin'].toString()),
-      caraRawatVideo: json['cara_rawat_video'],
+              ? double.tryParse(json['rating'].toString()) ?? 0.0
+              : 0.0,
+      stok: json['stok'] != null ? int.tryParse(json['stok'].toString()) : 0,
+      id_kategori: json['id_kategori'],
     );
   }
 }
