@@ -55,8 +55,6 @@ class _BlogDetailScreenState extends State<BlogDetailScreen> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isSmallScreen = size.width < 360;
-    final isMediumScreen = size.width >= 360 && size.width < 600;
-    final isLargeScreen = size.width >= 600;
 
     return Scaffold(
       appBar: const AppHeader(title: 'Artikel', showBackButton: true),
@@ -81,89 +79,95 @@ class _BlogDetailScreenState extends State<BlogDetailScreen> {
                   ],
                 ),
               )
-              : SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              : SafeArea(
+                child: ListView(
                   children: [
+                    // Featured Image
                     if (_post!.featuredImage != null)
-                      _post!.featuredImage!.startsWith('http')
-                          ? Image.network(
-                            _post!.featuredImage!,
-                            width: double.infinity,
-                            height: 250,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              print('Error loading network image: $error');
-                              return Image.asset(
-                                'assets/img/news1.png',
-                                width: double.infinity,
-                                height: 250,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  print('Error loading asset image: $error');
-                                  return Container(
-                                    height: 250,
-                                    color: Colors.grey[200],
-                                    child: const Icon(
-                                      Icons.image_not_supported,
-                                      size: 50,
-                                      color: Colors.grey,
-                                    ),
-                                  );
-                                },
-                              );
-                            },
-                          )
-                          : Image.asset(
-                            'assets/img/news1.png',
-                            width: double.infinity,
-                            height: 250,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              print('Error loading asset image: $error');
-                              return Container(
-                                height: 250,
-                                color: Colors.grey[200],
-                                child: const Icon(
-                                  Icons.image_not_supported,
-                                  size: 50,
-                                  color: Colors.grey,
+                      AspectRatio(
+                        aspectRatio: 16 / 9,
+                        child:
+                            _post!.featuredImage!.startsWith('http')
+                                ? Image.network(
+                                  _post!.featuredImage!,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Image.asset(
+                                      'assets/img/news1.png',
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (
+                                        context,
+                                        error,
+                                        stackTrace,
+                                      ) {
+                                        return Container(
+                                          color: Colors.grey[200],
+                                          child: const Icon(
+                                            Icons.image_not_supported,
+                                            size: 50,
+                                            color: Colors.grey,
+                                          ),
+                                        );
+                                      },
+                                    );
+                                  },
+                                )
+                                : Image.asset(
+                                  'assets/img/news1.png',
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      color: Colors.grey[200],
+                                      child: const Icon(
+                                        Icons.image_not_supported,
+                                        size: 50,
+                                        color: Colors.grey,
+                                      ),
+                                    );
+                                  },
                                 ),
-                              );
-                            },
-                          ),
+                      ),
+
+                    // Article Content
                     Padding(
-                      padding: EdgeInsets.all(isSmallScreen ? 16 : 24),
+                      padding: const EdgeInsets.all(16.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // Title
                           Text(
                             _post!.title,
-                            style: TextStyle(
-                              fontSize: isSmallScreen ? 20 : 24,
+                            style: const TextStyle(
+                              fontSize: 22,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 12),
+
+                          // Metadata
                           Row(
                             children: [
                               Icon(
                                 Icons.person_outline,
-                                size: isSmallScreen ? 14 : 16,
+                                size: 14,
                                 color: Colors.grey[600],
                               ),
                               const SizedBox(width: 4),
-                              Text(
-                                _post!.authorName ?? 'Penulis Tidak Diketahui',
-                                style: TextStyle(
-                                  fontSize: isSmallScreen ? 12 : 14,
-                                  color: Colors.grey[600],
+                              Expanded(
+                                child: Text(
+                                  _post!.authorName ??
+                                      'Penulis Tidak Diketahui',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey[600],
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
-                              const SizedBox(width: 16),
+                              const SizedBox(width: 8),
                               Icon(
                                 Icons.calendar_today,
-                                size: isSmallScreen ? 14 : 16,
+                                size: 14,
                                 color: Colors.grey[600],
                               ),
                               const SizedBox(width: 4),
@@ -173,122 +177,127 @@ class _BlogDetailScreenState extends State<BlogDetailScreen> {
                                   'id_ID',
                                 ).format(_post!.createdAt),
                                 style: TextStyle(
-                                  fontSize: isSmallScreen ? 12 : 14,
+                                  fontSize: 12,
                                   color: Colors.grey[600],
                                 ),
                               ),
-                              const SizedBox(width: 16),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              if (_post!.categoryName != null) ...[
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.primaryColor.withOpacity(
+                                      0.1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    _post!.categoryName!,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: AppTheme.primaryColor,
+                                    ),
+                                  ),
+                                ),
+                                const Spacer(),
+                              ] else
+                                const Spacer(),
                               Icon(
                                 Icons.visibility,
-                                size: isSmallScreen ? 14 : 16,
+                                size: 14,
                                 color: Colors.grey[600],
                               ),
                               const SizedBox(width: 4),
                               Text(
                                 '${_post!.views} views',
                                 style: TextStyle(
-                                  fontSize: isSmallScreen ? 12 : 14,
+                                  fontSize: 12,
                                   color: Colors.grey[600],
                                 ),
                               ),
                             ],
                           ),
-                          if (_post!.categoryName != null) ...[
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.category_outlined,
-                                  size: isSmallScreen ? 14 : 16,
-                                  color: Colors.grey[600],
+
+                          const Divider(height: 32),
+
+                          // HTML Content with fixed width constraints
+                          LayoutBuilder(
+                            builder: (context, constraints) {
+                              return SizedBox(
+                                width: constraints.maxWidth,
+                                child: Html(
+                                  data: _post!.content,
+                                  shrinkWrap: true,
+                                  style: {
+                                    "body": Style(
+                                      fontSize: FontSize(16),
+                                      margin: Margins.zero,
+                                      padding: HtmlPaddings.zero,
+                                      maxLines: null,
+                                      lineHeight: LineHeight.em(1.6),
+                                    ),
+                                    "p": Style(
+                                      margin: Margins(bottom: Margin(16)),
+                                    ),
+                                    "h1, h2, h3, h4, h5, h6": Style(
+                                      margin: Margins(
+                                        top: Margin(16),
+                                        bottom: Margin(8),
+                                      ),
+                                    ),
+                                    "img": Style(alignment: Alignment.center),
+                                  },
+                                  extensions: [
+                                    TagWrapExtension(
+                                      tagsToWrap: {
+                                        "table",
+                                        "pre",
+                                        "iframe",
+                                        "video",
+                                        "img",
+                                      },
+                                      builder: (child) {
+                                        return SingleChildScrollView(
+                                          scrollDirection: Axis.horizontal,
+                                          child: child,
+                                        );
+                                      },
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  _post!.categoryName!,
-                                  style: TextStyle(
-                                    fontSize: isSmallScreen ? 12 : 14,
-                                    color: Colors.grey[600],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+                              );
+                            },
+                          ),
+
+                          // Tags
                           if (_post!.tags.isNotEmpty) ...[
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 16),
                             Wrap(
                               spacing: 8,
+                              runSpacing: 8,
                               children:
                                   _post!.tags.map((tag) {
                                     return Chip(
                                       label: Text(
                                         tag,
-                                        style: TextStyle(
-                                          fontSize: isSmallScreen ? 12 : 14,
-                                        ),
+                                        style: const TextStyle(fontSize: 12),
                                       ),
                                       backgroundColor: Colors.grey[200],
+                                      padding: EdgeInsets.zero,
+                                      materialTapTargetSize:
+                                          MaterialTapTargetSize.shrinkWrap,
+                                      visualDensity: VisualDensity.compact,
                                     );
                                   }).toList(),
                             ),
                           ],
-                          const SizedBox(height: 24),
-                          Html(
-                            data: _post!.content,
-                            style: {
-                              "body": Style(
-                                fontSize: FontSize(isSmallScreen ? 14 : 16),
-                                lineHeight: LineHeight.em(1.6),
-                              ),
-                              "p": Style(margin: Margins(bottom: Margin(16))),
-                              "h1": Style(
-                                fontSize: FontSize(isSmallScreen ? 20 : 24),
-                                fontWeight: FontWeight.bold,
-                                margin: Margins(
-                                  bottom: Margin(16),
-                                  top: Margin(24),
-                                ),
-                              ),
-                              "h2": Style(
-                                fontSize: FontSize(isSmallScreen ? 18 : 22),
-                                fontWeight: FontWeight.bold,
-                                margin: Margins(
-                                  bottom: Margin(14),
-                                  top: Margin(20),
-                                ),
-                              ),
-                              "h3": Style(
-                                fontSize: FontSize(isSmallScreen ? 16 : 20),
-                                fontWeight: FontWeight.bold,
-                                margin: Margins(
-                                  bottom: Margin(12),
-                                  top: Margin(16),
-                                ),
-                              ),
-                              "a": Style(
-                                color: AppTheme.primaryColor,
-                                textDecoration: TextDecoration.underline,
-                              ),
-                              "img": Style(
-                                margin: Margins(
-                                  top: Margin(16),
-                                  bottom: Margin(16),
-                                ),
-                              ),
-                              "ul": Style(
-                                margin: Margins(
-                                  bottom: Margin(16),
-                                  left: Margin(20),
-                                ),
-                              ),
-                              "ol": Style(
-                                margin: Margins(
-                                  bottom: Margin(16),
-                                  left: Margin(20),
-                                ),
-                              ),
-                              "li": Style(margin: Margins(bottom: Margin(8))),
-                            },
-                          ),
                         ],
                       ),
                     ),
