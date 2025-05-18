@@ -17,7 +17,7 @@ dependencies:
   intl: ^0.18.0
   url_launcher: ^6.1.14
   form_field_validator: ^1.1.0
-  google_sign_in: ^6.1.5  # Keep only this version
+  google_sign_in: ^6.1.5 # Keep only this version
   google_sign_in_web: ^0.12.0
   flutter_facebook_auth: ^6.0.4
   flutter_launcher_icons: ^0.14.3
@@ -39,6 +39,7 @@ flutter:
     - assets/img/plantcategory.png
     - assets/img/seedscategory.png
     - assets/img/HijauLoklogo.png
+    - assets/img/news1.png
 
 flutter_launcher_icons:
   android: true

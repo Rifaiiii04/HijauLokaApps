@@ -86,22 +86,52 @@ class _BlogDetailScreenState extends State<BlogDetailScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (_post!.featuredImage != null)
-                      Image.network(
-                        _post!.featuredImage!,
-                        width: double.infinity,
-                        height: 250,
-                        fit: BoxFit.cover,
-                        errorBuilder:
-                            (context, error, stackTrace) => Container(
-                              height: 250,
-                              color: Colors.grey[200],
-                              child: const Icon(
-                                Icons.image_not_supported,
-                                size: 50,
-                                color: Colors.grey,
-                              ),
-                            ),
-                      ),
+                      _post!.featuredImage!.startsWith('http')
+                          ? Image.network(
+                            _post!.featuredImage!,
+                            width: double.infinity,
+                            height: 250,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              print('Error loading network image: $error');
+                              return Image.asset(
+                                'assets/img/news1.png',
+                                width: double.infinity,
+                                height: 250,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  print('Error loading asset image: $error');
+                                  return Container(
+                                    height: 250,
+                                    color: Colors.grey[200],
+                                    child: const Icon(
+                                      Icons.image_not_supported,
+                                      size: 50,
+                                      color: Colors.grey,
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                          )
+                          : Image.asset(
+                            'assets/img/news1.png',
+                            width: double.infinity,
+                            height: 250,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              print('Error loading asset image: $error');
+                              return Container(
+                                height: 250,
+                                color: Colors.grey[200],
+                                child: const Icon(
+                                  Icons.image_not_supported,
+                                  size: 50,
+                                  color: Colors.grey,
+                                ),
+                              );
+                            },
+                          ),
                     Padding(
                       padding: EdgeInsets.all(isSmallScreen ? 16 : 24),
                       child: Column(
