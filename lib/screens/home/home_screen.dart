@@ -495,6 +495,21 @@ class _HomeScreenState extends State<HomeScreen> {
           const CategoriesSection(),
           const BlogSection(),
           const CTASection(),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.pushNamed(context, '/blog');
+            },
+            icon: const Icon(Icons.article_outlined),
+            label: const Text('Blog'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryColor,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
         ],
       ),
     );

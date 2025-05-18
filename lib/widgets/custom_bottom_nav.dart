@@ -43,9 +43,15 @@ class CustomBottomNav extends StatelessWidget {
             label: 'Belanja',
           ),
           _buildNavItem(
+            icon: Icons.article_outlined,
+            activeIcon: Icons.article,
+            index: 2,
+            label: 'Blog',
+          ),
+          _buildNavItem(
             icon: Icons.person_outline,
             activeIcon: Icons.person,
-            index: 2,
+            index: 3,
             label: 'Profil',
           ),
         ],
@@ -64,7 +70,7 @@ class CustomBottomNav extends StatelessWidget {
     return InkWell(
       onTap: () => onTap(index),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -75,7 +81,7 @@ class CustomBottomNav extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              label, // Show label for all items
+              label,
               style: TextStyle(
                 color: isSelected ? AppTheme.primaryColor : Colors.grey,
                 fontSize: 12,

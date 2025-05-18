@@ -8,8 +8,13 @@ import 'package:hijauloka/screens/auth/login_screen.dart';
 import 'package:hijauloka/screens/auth/register_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:hijauloka/providers/filter_provider.dart';
+import 'package:hijauloka/screens/blog/blog_screen.dart';
+import 'package:hijauloka/screens/blog/blog_detail_screen.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('id_ID', null);
   runApp(
     MultiProvider(
       providers: [
@@ -32,12 +37,17 @@ class HijauLokaApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       initialRoute: '/',
       routes: {
-        '/': (context) => const MainScreen(initialIndex: 0), // Home screen as default
+        '/':
+            (context) =>
+                const MainScreen(initialIndex: 0), // Home screen as default
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
         '/cart': (context) => const PlaceholderScreen(title: 'Cart'),
-        '/notifications': (context) => const PlaceholderScreen(title: 'Notifications'),
+        '/notifications':
+            (context) => const PlaceholderScreen(title: 'Notifications'),
         '/wishlist': (context) => const PlaceholderScreen(title: 'Wishlist'),
+        '/blog': (context) => const BlogScreen(),
+        '/blog-detail': (context) => const BlogDetailScreen(),
       },
     );
   }
@@ -46,9 +56,9 @@ class HijauLokaApp extends StatelessWidget {
 // Placeholder screen for routes that don't have dedicated screens yet
 class PlaceholderScreen extends StatelessWidget {
   final String title;
-  
+
   const PlaceholderScreen({super.key, required this.title});
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -70,25 +80,22 @@ class PlaceholderScreen extends StatelessWidget {
             const SizedBox(height: 24),
             Text(
               '$title Screen',
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             Text(
               'This screen is under development',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
             ),
             const SizedBox(height: 32),
             ElevatedButton(
               onPressed: () => Navigator.pop(context),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primaryColor,
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 12,
+                ),
               ),
               child: const Text('Go Back'),
             ),
@@ -97,7 +104,7 @@ class PlaceholderScreen extends StatelessWidget {
       ),
     );
   }
-  
+
   IconData _getIconForTitle(String title) {
     switch (title.toLowerCase()) {
       case 'cart':
@@ -114,7 +121,7 @@ class PlaceholderScreen extends StatelessWidget {
 
 class MainScreen extends StatefulWidget {
   final int initialIndex;
-  
+
   const MainScreen({super.key, this.initialIndex = 0});
 
   @override
@@ -123,10 +130,11 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   late int _selectedIndex;
-  
+
   final List<Widget> _screens = [
     const HomeScreen(),
     const CategoryScreen(),
+    const BlogScreen(),
     const ProfileScreen(),
   ];
 

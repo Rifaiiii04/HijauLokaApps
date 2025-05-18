@@ -1,8 +1,8 @@
 <?php
 // Set headers
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET');
+// header('Access-Control-Allow-Origin: *');
+// header('Access-Control-Allow-Methods: GET');
 
 // Check if ID is provided
 if (!isset($_GET['id']) || empty($_GET['id'])) {

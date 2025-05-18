@@ -1,7 +1,7 @@
 <?php
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET');
+// header('Access-Control-Allow-Origin: *');
+// header('Access-Control-Allow-Methods: GET');
 
 // Set UTF-8 encoding for database connection
 ini_set('default_charset', 'UTF-8');
