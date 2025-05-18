@@ -7,17 +7,19 @@ class ProductCard extends StatelessWidget {
   final String imageUrl;
   final double rating;
   final String category;
-  final VoidCallback? onTap;
+  final VoidCallback onTap;
+  final VoidCallback? onAddToCart; // Add this parameter
 
   const ProductCard({
-    super.key,
+    Key? key,
     required this.name,
     required this.price,
     required this.imageUrl,
     required this.rating,
-    this.category = '',
-    this.onTap,
-  });
+    required this.category,
+    required this.onTap,
+    this.onAddToCart, // Add this parameter
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -163,34 +165,26 @@ class ProductCard extends StatelessWidget {
                       size: 16,
                     ),
                   ),
-                  // Add to cart button
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryColor,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.shopping_cart_outlined,
-                          color: Colors.white,
-                          size: 14,
-                        ),
-                        SizedBox(width: 4),
-                        Text(
-                          'Beli',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 11,
-                          ),
-                        ),
-                      ],
+                  // Add to cart button - Wrapped in GestureDetector to handle tap separately
+                  GestureDetector(
+                    onTap: () {
+                      // Prevent tap from propagating to parent
+                      if (onAddToCart != null) {
+                        onAddToCart!();
+                      }
+                    },
+                    behavior: HitTestBehavior.opaque,
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryColor,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.shopping_cart_outlined,
+                        color: Colors.white,
+                        size: 16,
+                      ),
                     ),
                   ),
                 ],

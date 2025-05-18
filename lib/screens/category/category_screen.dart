@@ -8,6 +8,9 @@ import 'package:hijauloka/widgets/filter_drawer.dart';
 import 'package:hijauloka/widgets/product_card.dart';
 import 'package:hijauloka/screens/product/product_detail_screen.dart';
 import 'package:provider/provider.dart';
+import 'package:hijauloka/services/auth_service.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class CategoryScreen extends StatefulWidget {
   const CategoryScreen({super.key});
@@ -84,6 +87,124 @@ class _CategoryScreenState extends State<CategoryScreen> {
         return const FilterDrawer();
       },
     ).then((_) => _applyFilters());
+  }
+
+  // Add this method to handle adding products to cart
+  Future<void> _addToCart(Product product) async {
+    // Check if user is logged in
+    final bool isLoggedIn = await AuthService.isLoggedIn();
+    
+    if (!isLoggedIn) {
+      // Show login dialog
+      _showLoginRequiredDialog();
+      return;
+    }
+    
+    // Get the user ID from AuthService
+    final String? userId = await AuthService.getUserId();
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Sesi login tidak valid, silakan login ulang'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+    
+    final int quantity = 1; // Default quantity
+    
+    setState(() {
+      _isLoading = true;
+    });
+    
+    try {
+      final requestBody = {
+        'id_user': userId,
+        'id_product': product.id.toString(),
+        'jumlah': quantity.toString(),
+      };
+      
+      final response = await http.post(
+        Uri.parse('https://admin.hijauloka.my.id/api/add_to_cart.php'),
+        body: requestBody,
+      ).timeout(const Duration(seconds: 15));
+      
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        
+        if (data['success'] == true) {
+          // Show success message
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(data['message'] ?? 'Produk berhasil ditambahkan ke keranjang'),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        } else {
+          // Show error message
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: ${data['message'] ?? 'Gagal menambahkan produk ke keranjang'}'),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      } else {
+        // Show error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Server error: ${response.statusCode}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+  
+  // Add this method to show login required dialog
+  void _showLoginRequiredDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Login Diperlukan'),
+          content: const Text('Anda harus login terlebih dahulu untuk menambahkan produk ke keranjang.'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Batal'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Login'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                // Navigate to login screen
+                Navigator.pushNamed(context, '/login');
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -207,7 +328,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
                                   gridDelegate:
                                       const SliverGridDelegateWithFixedCrossAxisCount(
                                     crossAxisCount: 2,
-                                    childAspectRatio: 0.68, // Adjusted from 0.7 to 0.68 to make cards slightly taller
+                                    childAspectRatio: 0.68,
                                     crossAxisSpacing: 24,
                                     mainAxisSpacing: 28,
                                   ),
@@ -228,6 +349,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
                                           ),
                                         );
                                       },
+                                      onAddToCart: () => _addToCart(product),
                                     );
                                   },
                                 ),
