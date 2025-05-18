@@ -81,12 +81,10 @@ class Review {
 
 class ProductDetailScreen extends StatefulWidget {
   final Product product;
-  
-  const ProductDetailScreen({
-    Key? key,
-    required this.product,
-  }) : super(key: key);
-  
+
+  const ProductDetailScreen({Key? key, required this.product})
+    : super(key: key);
+
   @override
   State<ProductDetailScreen> createState() => _ProductDetailScreenState();
 }
@@ -110,9 +108,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       });
 
       print('Fetching product detail for ID: ${widget.product.id}');
-      final response = await http.get(
-        Uri.parse('https://admin.hijauloka.my.id/api/get_product_detail.php?id=${widget.product.id}'),
-      ).timeout(const Duration(seconds: 15));
+      final response = await http
+          .get(
+            Uri.parse(
+              'https://admin.hijauloka.my.id/api/get_product_detail.php?id=${widget.product.id}',
+            ),
+          )
+          .timeout(const Duration(seconds: 15));
 
       print('Response status code: ${response.statusCode}');
       print('Response body: ${response.body}');
@@ -121,11 +123,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         if (response.body.isEmpty) {
           throw Exception('Empty response from server');
         }
-        
+
         final data = json.decode(response.body);
-        
+
         // Check for both 'success' and 'status' keys as API might use either
-        if ((data['success'] == true || data['status'] == 'success') && data['data'] != null) {
+        if ((data['success'] == true || data['status'] == 'success') &&
+            data['data'] != null) {
           setState(() {
             productDetail = data['data'];
             isLoading = false;
@@ -158,17 +161,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.image_not_supported_outlined, 
-            size: 64, 
-            color: Colors.grey[400]
+            Icons.image_not_supported_outlined,
+            size: 64,
+            color: Colors.grey[400],
           ),
           const SizedBox(height: 12),
           Text(
             'Gambar tidak tersedia',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 16,
-            ),
+            style: TextStyle(color: Colors.grey[600], fontSize: 16),
           ),
         ],
       ),
@@ -197,48 +197,49 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           ),
         ],
       ),
-      body: isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: AppTheme.primaryColor),
-            )
-          : errorMessage.isNotEmpty
+      body:
+          isLoading
+              ? const Center(
+                child: CircularProgressIndicator(color: AppTheme.primaryColor),
+              )
+              : errorMessage.isNotEmpty
               ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          errorMessage,
-                          style: const TextStyle(color: Colors.red),
-                          textAlign: TextAlign.center,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        errorMessage,
+                        style: const TextStyle(color: Colors.red),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: fetchProductDetail,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primaryColor,
                         ),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: fetchProductDetail,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.primaryColor,
-                          ),
-                          child: const Text('Coba Lagi'),
-                        ),
-                      ],
-                    ),
+                        child: const Text('Coba Lagi'),
+                      ),
+                    ],
                   ),
-                )
+                ),
+              )
               : _buildProductDetail(),
-      bottomNavigationBar: isLoading || errorMessage.isNotEmpty
-          ? null
-          : _buildBottomBar(),
+      bottomNavigationBar:
+          isLoading || errorMessage.isNotEmpty ? null : _buildBottomBar(),
     );
   }
 
   Widget _buildProductDetail() {
     final product = productDetail!;
-    
+
     // Gunakan image_url dari API jika tersedia, jika tidak buat URL sendiri
-    final String imageUrl = product['image_url'] ?? 
-                           "https://admin.hijauloka.my.id/uploads/" + (product['gambar'] ?? '');
-    
+    final String imageUrl =
+        product['image_url'] ??
+        "https://admin.hijauloka.my.id/uploads/" + (product['gambar'] ?? '');
+
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -247,34 +248,34 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           Container(
             height: 300,
             width: double.infinity,
-            decoration: BoxDecoration(
-              color: Colors.grey[100],
-            ),
-            child: imageUrl.isEmpty
-                ? _buildImagePlaceholder()
-                : Image.network(
-                    imageUrl,
-                    fit: BoxFit.contain,
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return Center(
-                        child: CircularProgressIndicator(
-                          value: loadingProgress.expectedTotalBytes != null
-                              ? loadingProgress.cumulativeBytesLoaded / 
-                                loadingProgress.expectedTotalBytes!
-                              : null,
-                          color: AppTheme.primaryColor,
-                        ),
-                      );
-                    },
-                    errorBuilder: (context, error, stackTrace) {
-                      print('Error loading image: $error');
-                      print('Image URL: $imageUrl');
-                      return _buildImagePlaceholder();
-                    },
-                  ),
+            decoration: BoxDecoration(color: Colors.grey[100]),
+            child:
+                imageUrl.isEmpty
+                    ? _buildImagePlaceholder()
+                    : Image.network(
+                      imageUrl,
+                      fit: BoxFit.contain,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Center(
+                          child: CircularProgressIndicator(
+                            value:
+                                loadingProgress.expectedTotalBytes != null
+                                    ? loadingProgress.cumulativeBytesLoaded /
+                                        loadingProgress.expectedTotalBytes!
+                                    : null,
+                            color: AppTheme.primaryColor,
+                          ),
+                        );
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        print('Error loading image: $error');
+                        print('Image URL: $imageUrl');
+                        return _buildImagePlaceholder();
+                      },
+                    ),
           ),
-          
+
           // Product Info
           Padding(
             padding: const EdgeInsets.all(16.0),
@@ -285,7 +286,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 // ...
                 // Category
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.grey[200],
                     borderRadius: BorderRadius.circular(20),
@@ -295,9 +299,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     style: TextStyle(color: Colors.grey[700], fontSize: 12),
                   ),
                 ),
-                
+
                 const SizedBox(height: 12),
-                
+
                 // Product Name
                 Text(
                   product['nama_product'] ?? 'Nama Produk',
@@ -306,17 +310,22 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                
+
                 const SizedBox(height: 8),
-                
+
                 // Rating
                 Row(
                   children: [
                     ...List.generate(
                       5,
                       (index) => Icon(
-                        index < (double.tryParse(product['rating']?.toString() ?? '0') ?? 0).floor() 
-                            ? Icons.star 
+                        index <
+                                (double.tryParse(
+                                          product['rating']?.toString() ?? '0',
+                                        ) ??
+                                        0)
+                                    .floor()
+                            ? Icons.star
                             : Icons.star_border,
                         color: Colors.amber,
                         size: 18,
@@ -332,9 +341,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Price
                 Text(
                   'Rp${product['harga'] ?? '0'}',
@@ -344,73 +353,68 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     color: AppTheme.primaryColor,
                   ),
                 ),
-                
+
                 // Stock
                 Text(
                   'Stok: ${product['stok'] ?? '0'}',
                   style: TextStyle(color: Colors.grey[600]),
                 ),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Description
                 const Text(
                   'Deskripsi',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-                
+
                 const SizedBox(height: 8),
-                
+
                 Text(
                   product['desk_product'] ?? 'Deskripsi tidak tersedia',
-                  style: TextStyle(
-                    color: Colors.grey[800],
-                    height: 1.5,
-                  ),
+                  style: TextStyle(color: Colors.grey[800], height: 1.5),
                 ),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Care Instructions
                 const Text(
                   'Petunjuk Perawatan',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-                
+
                 const SizedBox(height: 8),
-                
-                product['cara_rawat_video'] != null && product['cara_rawat_video'].toString().isNotEmpty
+
+                product['cara_rawat_video'] != null &&
+                        product['cara_rawat_video'].toString().isNotEmpty
                     ? InkWell(
-                        onTap: () {
-                          // Open video link
-                        },
-                        child: Row(
-                          children: [
-                            Icon(Icons.play_circle_outline, color: AppTheme.primaryColor),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Tonton video perawatan',
-                              style: TextStyle(
-                                color: AppTheme.primaryColor,
-                                fontWeight: FontWeight.bold,
-                              ),
+                      onTap: () {
+                        // Open video link
+                      },
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.play_circle_outline,
+                            color: AppTheme.primaryColor,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Tonton video perawatan',
+                            style: TextStyle(
+                              color: AppTheme.primaryColor,
+                              fontWeight: FontWeight.bold,
                             ),
-                          ],
-                        ),
-                      )
-                    : Text(
-                        'Petunjuk perawatan tidak tersedia',
-                        style: TextStyle(color: Colors.grey[600]),
+                          ),
+                        ],
                       ),
-                
+                    )
+                    : Text(
+                      'Petunjuk perawatan tidak tersedia',
+                      style: TextStyle(color: Colors.grey[600]),
+                    ),
+
                 const SizedBox(height: 24),
-                
+
                 // Reviews
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -431,25 +435,27 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 8),
-                
-                product['reviews'] == null || (product['reviews'] as List).isEmpty
+
+                product['reviews'] == null ||
+                        (product['reviews'] as List).isEmpty
                     ? Center(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 16.0),
-                          child: Text(
-                            'Belum ada ulasan',
-                            style: TextStyle(color: Colors.grey[600]),
-                          ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 16.0),
+                        child: Text(
+                          'Belum ada ulasan',
+                          style: TextStyle(color: Colors.grey[600]),
                         ),
-                      )
-                    : Column(
-                        children: (product['reviews'] as List)
-                            .take(3)
-                            .map((review) => _buildReviewItem(review))
-                            .toList(),
                       ),
+                    )
+                    : Column(
+                      children:
+                          (product['reviews'] as List)
+                              .take(3)
+                              .map((review) => _buildReviewItem(review))
+                              .toList(),
+                    ),
               ],
             ),
           ),
@@ -475,16 +481,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             children: [
               Text(
                 review['username'] ?? 'Anonim',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               Text(
-                review['tgl_review']?.toString().split(' ')[0] ?? '', // Just show the date part
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
-                ),
+                review['tgl_review']?.toString().split(' ')[0] ??
+                    '', // Just show the date part
+                style: TextStyle(color: Colors.grey[600], fontSize: 12),
               ),
             ],
           ),
@@ -493,8 +495,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             children: List.generate(
               5,
               (index) => Icon(
-                index < (int.tryParse(review['rating']?.toString() ?? '0') ?? 0) 
-                    ? Icons.star 
+                index < (int.tryParse(review['rating']?.toString() ?? '0') ?? 0)
+                    ? Icons.star
                     : Icons.star_border,
                 color: Colors.amber,
                 size: 16,
@@ -504,9 +506,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           const SizedBox(height: 8),
           Text(
             review['ulasan'] ?? 'Tidak ada komentar',
-            style: TextStyle(
-              color: Colors.grey[800],
-            ),
+            style: TextStyle(color: Colors.grey[800]),
           ),
         ],
       ),
@@ -562,9 +562,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               ),
               child: const Text(
                 'Beli Sekarang',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
           ),
@@ -572,18 +570,18 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       ),
     );
   }
-  
+
   // Add this method to handle adding products to cart
   Future<void> _addToCart() async {
     // Check if user is logged in
     final bool isLoggedIn = await AuthService.isLoggedIn();
-    
+
     if (!isLoggedIn) {
       // Show login dialog or navigate to login screen
       _showLoginRequiredDialog();
       return;
     }
-    
+
     // Get the user ID from AuthService
     final String? userId = await AuthService.getUserId();
     if (userId == null) {
@@ -595,7 +593,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       );
       return;
     }
-    
+
     // Get product ID from the product detail
     if (productDetail == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -606,7 +604,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       );
       return;
     }
-    
+
     // Fix: Access id_product directly from the Map
     final productId = productDetail!['id_product'];
     if (productId == null) {
@@ -618,38 +616,44 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       );
       return;
     }
-    
+
     final int quantity = 1; // Default quantity
-    
+
     setState(() {
       isLoading = true;
     });
-    
+
     try {
-      print('Sending request with: userId=$userId, productId=$productId, quantity=$quantity');
-      
+      print(
+        'Sending request with: userId=$userId, productId=$productId, quantity=$quantity',
+      );
+
       final requestBody = {
         'id_user': userId,
         'id_product': productId.toString(),
         'jumlah': quantity.toString(),
       };
       print('Request body: $requestBody');
-      
-      final response = await http.post(
-        Uri.parse('https://admin.hijauloka.my.id/api/add_to_cart.php'),
-        body: requestBody,
-      ).timeout(const Duration(seconds: 15));
-      
+
+      final response = await http
+          .post(
+            Uri.parse('https://admin.hijauloka.my.id/api/add_to_cart.php'),
+            body: requestBody,
+          )
+          .timeout(const Duration(seconds: 15));
+
       print('Add to cart response body: ${response.body}');
-      
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        
+
         if (data['success'] == true) {
           // Show success message
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(data['message'] ?? 'Produk berhasil ditambahkan ke keranjang'),
+              content: Text(
+                data['message'] ?? 'Produk berhasil ditambahkan ke keranjang',
+              ),
               backgroundColor: Colors.green,
               duration: const Duration(seconds: 2),
             ),
@@ -658,7 +662,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           // Show error message with more details
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Error: ${data['message'] ?? 'Gagal menambahkan produk ke keranjang'}'),
+              content: Text(
+                'Error: ${data['message'] ?? 'Gagal menambahkan produk ke keranjang'}',
+              ),
               backgroundColor: Colors.red,
               duration: const Duration(seconds: 3),
             ),
@@ -690,33 +696,91 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       });
     }
   }
-  
+
   // Add this method to show login required dialog
   void _showLoginRequiredDialog() {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Login Diperlukan'),
-          content: const Text('Anda harus login terlebih dahulu untuk menambahkan produk ke keranjang.'),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Batal'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+      builder:
+          (context) => Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
             ),
-            TextButton(
-              child: const Text('Login'),
-              onPressed: () {
-                Navigator.of(context).pop();
-                // Navigate to login screen
-                Navigator.pushNamed(context, '/login');
-              },
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryColor.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.account_circle_outlined,
+                      size: 48,
+                      color: AppTheme.primaryColor,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
+                    'Login Diperlukan',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Silakan login untuk menambahkan produk ke keranjang',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 14, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
+                        ),
+                        child: const Text(
+                          'Batal',
+                          style: TextStyle(color: Colors.grey, fontSize: 14),
+                        ),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          Navigator.pushNamed(context, '/login');
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primaryColor,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: const Text(
+                          'Login',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ],
-        );
-      },
+          ),
     );
   }
 }
