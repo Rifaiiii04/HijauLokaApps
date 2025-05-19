@@ -109,192 +109,232 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: Colors.grey[50],
       appBar: const AppHeader(title: 'Detail Pesanan'),
-      body:
-          _isLoading
-              ? const Center(
-                child: CircularProgressIndicator(color: AppTheme.primaryColor),
-              )
-              : _errorMessage != null
-              ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      _errorMessage!,
-                      style: const TextStyle(color: Colors.red),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: _loadOrderDetail,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.primaryColor,
+      body: Column(
+        children: [
+          Expanded(
+            child:
+                _isLoading
+                    ? const Center(
+                      child: CircularProgressIndicator(
+                        color: AppTheme.primaryColor,
                       ),
-                      child: const Text('Coba Lagi'),
-                    ),
-                  ],
-                ),
-              )
-              : SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildOrderStatusCard(),
-                    const SizedBox(height: 16),
-                    _buildOrderInfoCard(),
-                    const SizedBox(height: 16),
-                    _buildShippingAddressCard(),
-                    const SizedBox(height: 16),
-                    _buildOrderItemsCard(),
-                    const SizedBox(height: 16),
-                    _buildPaymentDetailsCard(),
-                  ],
-                ),
-              ),
-    );
-  }
-
-  Widget _buildOrderStatusCard() {
-    // Get status from stts_pemesanan field
-    final status = _order!.status.toLowerCase();
-    final statusColor = _getStatusColor(status);
-    final statusText = _getStatusText(status);
-    final statusDescription = _getStatusDescription(status);
-    
-    // Check if payment is needed based on stts_pembayaran
-    final needsPayment = _order!.paymentStatus == 'belum_dibayar';
-    
-    // Check if order can be cancelled
-    final canCancel = status == 'pending'; // Only allow cancellation for pending orders
-    
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (status == 'selesai') ...[
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.green[50],
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.green[200]!),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.green[100],
-                        shape: BoxShape.circle,
+                    )
+                    : _errorMessage != null
+                    ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            size: 60,
+                            color: Colors.red[300],
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            _errorMessage!,
+                            style: const TextStyle(color: Colors.red),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton.icon(
+                            onPressed: _loadOrderDetail,
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('Coba Lagi'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.primaryColor,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 12,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      child: const Icon(
-                        Icons.check_circle,
-                        color: Colors.green,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
+                    )
+                    : SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Pesanan Selesai',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.green,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Terima kasih telah berbelanja di HijauLoka!',
-                            style: TextStyle(
-                              color: Colors.green[700],
-                              fontSize: 13,
+                          // Order status banner
+                          _buildOrderStatusBanner(),
+
+                          // Main content with padding
+                          Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildOrderInfoCard(),
+                                const SizedBox(height: 16),
+                                _buildShippingAddressCard(),
+                                const SizedBox(height: 16),
+                                _buildOrderItemsCard(),
+                                const SizedBox(height: 16),
+                                _buildPaymentDetailsCard(),
+                                const SizedBox(height: 24),
+                              ],
                             ),
                           ),
                         ],
                       ),
                     ),
-                  ],
+          ),
+          // Cancel button at the bottom if order can be cancelled
+          if (_order != null && _order!.status.toLowerCase() == 'pending')
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () async {
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder:
+                          (context) => AlertDialog(
+                            title: const Text('Batalkan Pesanan'),
+                            content: const Text(
+                              'Apakah Anda yakin ingin membatalkan pesanan ini?',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text('Tidak'),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                child: const Text('Ya'),
+                              ),
+                            ],
+                          ),
+                    );
+                    if (confirm == true) {
+                      await _cancelOrder();
+                    }
+                  },
+                  icon: const Icon(Icons.cancel_outlined, color: Colors.red),
+                  label: const Text('Batalkan Pesanan'),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Colors.red),
+                    foregroundColor: Colors.red,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
                 ),
               ),
-              const SizedBox(height: 16),
-            ],
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    _getStatusIcon(status),
-                    color: statusColor,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        statusText,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: statusColor,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        statusDescription,
-                        style: TextStyle(color: Colors.grey[600], fontSize: 13),
-                      ),
-                    ],
-                  ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  // New method for status banner at the top
+  Widget _buildOrderStatusBanner() {
+    final status = _order!.status.toLowerCase();
+    final statusColor = _getStatusColor(status);
+    final statusText = _getStatusText(status);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+      decoration: BoxDecoration(
+        color: statusColor.withOpacity(0.1),
+        border: Border(
+          bottom: BorderSide(color: statusColor.withOpacity(0.2), width: 1),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: statusColor.withOpacity(0.2),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
                 ),
               ],
             ),
-            if (needsPayment) ...[
-              // Payment notification removed
-            ],
-          ],
-        ),
+            child: Icon(_getStatusIcon(status), color: statusColor, size: 24),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  statusText,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: statusColor,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  _getStatusDescription(status),
+                  style: TextStyle(color: Colors.grey[700], fontSize: 13),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
+  }
+
+  Widget _buildOrderStatusCard() {
+    // This method is replaced by _buildOrderStatusBanner
+    // Keeping it for backward compatibility
+    return const SizedBox.shrink();
   }
 
   Widget _buildOrderInfoCard() {
     return Card(
       elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.grey[200]!),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Informasi Pesanan',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            Row(
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  color: AppTheme.primaryColor,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  'Informasi Pesanan',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
             _buildInfoRow('ID Pesanan', _order!.orderId),
             const Divider(height: 16),
-            _buildInfoRow('Tanggal Pemesanan', 
-              DateFormat('dd MMM yyyy HH:mm').format(
-                DateTime.parse(_order!.orderDate)
-              )
+            _buildInfoRow(
+              'Tanggal Pemesanan',
+              DateFormat(
+                'dd MMM yyyy HH:mm',
+              ).format(DateTime.parse(_order!.orderDate)),
             ),
             const Divider(height: 16),
             _buildInfoRow(
@@ -313,52 +353,91 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   Widget _buildShippingAddressCard() {
-    // Check if shipping address data is available
-    final hasShippingAddress = _order?.shippingAddress != null && 
-                              (_order?.recipientName?.isNotEmpty ?? false);
-    
+    final hasShippingAddress =
+        _order?.shippingAddress != null &&
+        (_order?.recipientName?.isNotEmpty ?? false);
+
     return Card(
       elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.grey[200]!),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Alamat Pengiriman',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            Row(
+              children: [
+                Icon(
+                  Icons.location_on_outlined,
+                  color: AppTheme.primaryColor,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  'Alamat Pengiriman',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
             if (hasShippingAddress) ...[
-              Text(
-                _order!.recipientName,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 4),
-              Text(_order!.phone),
-              const SizedBox(height: 4),
-              Text(_order!.address),
-              if (_order!.detailAddress.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Text(
-                  'Catatan: ${_order!.detailAddress}',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontStyle: FontStyle.italic,
-                  ),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey[200]!),
                 ),
-              ],
-            ] else ...[
-              // Fallback to user's address if shipping address is not available
-              Text(
-                _order?.userName ?? 'N/A',
-                style: const TextStyle(fontWeight: FontWeight.bold),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _order!.recipientName,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(_order!.phone),
+                    const SizedBox(height: 4),
+                    Text(_order!.address),
+                    if (_order!.detailAddress.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        'Catatan: ${_order!.detailAddress}',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ),
-              const SizedBox(height: 4),
-              Text(_order?.userPhone ?? 'N/A'),
-              const SizedBox(height: 4),
-              Text(_order?.userAddress ?? 'Alamat tidak tersedia'),
+            ] else ...[
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey[200]!),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _order?.userName ?? 'N/A',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(_order?.userPhone ?? 'N/A'),
+                    const SizedBox(height: 4),
+                    Text(_order?.userAddress ?? 'Alamat tidak tersedia'),
+                  ],
+                ),
+              ),
             ],
           ],
         ),
@@ -369,51 +448,68 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   Widget _buildOrderItemsCard() {
     return Card(
       elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.grey[200]!),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Detail Pesanan',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+            Row(
+              children: [
+                Icon(
+                  Icons.shopping_bag_outlined,
+                  color: AppTheme.primaryColor,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  'Detail Pesanan',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
-            
+
             if (_order?.items != null && _order!.items.isNotEmpty) ...[
               // Display order items if available
               ..._order!.items.map((item) => _buildOrderItemRow(item)).toList(),
+              const Divider(height: 24),
             ] else ...[
               // Show subtotal and shipping cost separately
               _buildPriceRow('Subtotal Produk', _order?.subtotal ?? 0),
               const SizedBox(height: 8),
               _buildPriceRow('Biaya Pengiriman', _order?.shippingCost ?? 0),
-              const SizedBox(height: 8),
-              const Divider(),
+              const Divider(height: 16),
             ],
-            
+
             // Always show total
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Total Pesanan',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryColor.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Total Pesanan',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
-                ),
-                Text(
-                  'Rp${_order!.total.toStringAsFixed(0)}',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.primaryColor,
+                  Text(
+                    'Rp${_order!.total.toStringAsFixed(0)}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: AppTheme.primaryColor,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),
@@ -422,37 +518,93 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   Widget _buildPaymentDetailsCard() {
-    final paymentStatus = _order!.paymentStatus == 'lunas' 
-        ? 'Lunas' 
-        : 'Menunggu Pembayaran';
-        
+    final paymentStatus =
+        _order!.paymentStatus == 'lunas' ? 'Lunas' : 'Menunggu Pembayaran';
+
+    final bool isPaid = _order!.paymentStatus == 'lunas';
+
     return Card(
       elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.grey[200]!),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Informasi Pembayaran',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            Row(
+              children: [
+                Icon(
+                  Icons.payment_outlined,
+                  color: AppTheme.primaryColor,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  'Informasi Pembayaran',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
+
+            // Payment status with colored badge
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isPaid ? Colors.green[50] : Colors.amber[50],
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border.all(
+                      color: isPaid ? Colors.green[300]! : Colors.amber[300]!,
+                    ),
+                  ),
+                  child: Text(
+                    paymentStatus,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: isPaid ? Colors.green[700] : Colors.amber[700],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
             _buildInfoRow(
               'Metode Pembayaran',
               _getPaymentMethodText(_order!.paymentMethod),
             ),
-            const Divider(height: 16),
-            _buildInfoRow(
-              'Status Pembayaran',
-              paymentStatus,
-            ),
+
             if (_order!.paymentMethod == 'cod') ...[
               const Divider(height: 16),
-              _buildInfoRow(
-                'Instruksi',
-                'Silakan siapkan uang tunai sebesar Rp ${_order!.total.toStringAsFixed(0)} untuk dibayarkan kepada kurir ketika pesanan tiba.',
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.blue[100]!),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, color: Colors.blue[700], size: 20),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Silakan siapkan uang tunai sebesar Rp ${_order!.total.toStringAsFixed(0)} untuk dibayarkan kepada kurir ketika pesanan tiba.',
+                        style: TextStyle(color: Colors.blue[700], fontSize: 13),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ],
@@ -472,8 +624,14 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   Widget _buildOrderItemRow(CartItem item) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -481,13 +639,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             borderRadius: BorderRadius.circular(8),
             child: Image.network(
               item.productImage,
-              width: 60,
-              height: 60,
+              width: 70,
+              height: 70,
               fit: BoxFit.cover,
               errorBuilder:
                   (context, error, stackTrace) => Container(
-                    width: 60,
-                    height: 60,
+                    width: 70,
+                    height: 70,
                     color: Colors.grey[200],
                     child: const Icon(
                       Icons.image_not_supported,
@@ -507,22 +665,25 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'Rp ${item.productPrice.toStringAsFixed(0)} x ${item.quantity}',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Rp ${item.productPrice.toStringAsFixed(0)} x ${item.quantity}',
+                      style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                    ),
+                    Text(
+                      'Rp ${(item.productPrice * item.quantity).toStringAsFixed(0)}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.primaryColor,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                'Rp ${(item.productPrice * item.quantity).toStringAsFixed(0)}',
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ],
           ),
         ],
       ),
