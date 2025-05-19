@@ -2,7 +2,17 @@
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
+// Only set content type, let .htaccess handle CORS
 header('Content-Type: application/json; charset=utf-8');
+// header('Access-Control-Allow-Origin: *');
+// header('Access-Control-Allow-Methods: GET, OPTIONS');
+// header('Access-Control-Allow-Headers: Content-Type');
+
+// Handle preflight OPTIONS request
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
 
 // Check for required parameters
 if (!isset($_GET['user_id'])) {
@@ -55,9 +65,10 @@ try {
     $totalRow = $totalResult->fetch_assoc();
     $totalOrders = $totalRow['total'];
     
-    // Get orders with pagination - simplified query
+    // Get orders with pagination - updated query to include id_order as order_id
     $sql = "SELECT 
                 o.id_order,
+                o.id_order as order_id, 
                 o.tgl_pemesanan,
                 o.stts_pemesanan,
                 o.total_harga,
@@ -90,6 +101,7 @@ try {
         // Add order to array with minimal processing
         $orders[] = [
             'id_order' => (int)$row['id_order'],
+            'order_id' => (string)$row['order_id'], // Added order_id
             'tgl_pemesanan' => $row['tgl_pemesanan'],
             'formatted_date' => $formattedDate,
             'status' => $row['stts_pemesanan'],

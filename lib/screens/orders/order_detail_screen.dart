@@ -408,6 +408,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   Widget _buildShippingAddressCard() {
+    // Check if shipping address data is available
+    final hasShippingAddress = _order?.shippingAddress != null && 
+                              (_order?.recipientName?.isNotEmpty ?? false);
+    
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -421,23 +425,35 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            Text(
-              _order!.recipientName,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 4),
-            Text(_order!.phone),
-            const SizedBox(height: 4),
-            Text(_order!.address),
-            if (_order!.detailAddress.isNotEmpty) ...[
-              const SizedBox(height: 4),
+            if (hasShippingAddress) ...[
               Text(
-                'Catatan: ${_order!.detailAddress}',
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontStyle: FontStyle.italic,
-                ),
+                _order!.recipientName,
+                style: const TextStyle(fontWeight: FontWeight.bold),
               ),
+              const SizedBox(height: 4),
+              Text(_order!.phone),
+              const SizedBox(height: 4),
+              Text(_order!.address),
+              if (_order!.detailAddress.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  'Catatan: ${_order!.detailAddress}',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ] else ...[
+              // Fallback to user's address if shipping address is not available
+              Text(
+                _order?.userName ?? 'N/A',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 4),
+              Text(_order?.userPhone ?? 'N/A'),
+              const SizedBox(height: 4),
+              Text(_order?.userAddress ?? 'Alamat tidak tersedia'),
             ],
           ],
         ),
@@ -446,7 +462,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   Widget _buildOrderItemsCard() {
-    // Since we don't have order items anymore, we'll show a message
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -463,20 +478,20 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            // Show a message that items are not available
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Text(
-                  'Detail item pesanan tidak tersedia',
-                  style: TextStyle(
-                    color: Colors.grey,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ),
-            ),
-            const Divider(),
+            
+            if (_order?.items != null && _order!.items.isNotEmpty) ...[
+              // Display order items if available
+              ..._order!.items.map((item) => _buildOrderItemRow(item)).toList(),
+            ] else ...[
+              // Show subtotal and shipping cost separately
+              _buildPriceRow('Subtotal Produk', _order?.subtotal ?? 0),
+              const SizedBox(height: 8),
+              _buildPriceRow('Biaya Pengiriman', _order?.shippingCost ?? 0),
+              const SizedBox(height: 8),
+              const Divider(),
+            ],
+            
+            // Always show total
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
