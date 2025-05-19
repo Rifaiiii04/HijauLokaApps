@@ -168,7 +168,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     final needsPayment = _order!.paymentStatus == 'belum_dibayar';
     
     // Check if order can be cancelled
-    final canCancel = status == 'pending' || status == 'diproses';
+    final canCancel = status == 'pending'; // Only allow cancellation for pending orders
     
     return Card(
       elevation: 0,
@@ -267,102 +267,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               ],
             ),
             if (needsPayment) ...[
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.amber[50],
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.amber[200]!),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.payment, color: Colors.amber, size: 24),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Pembayaran Belum Dilakukan',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.amber,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Silakan selesaikan pembayaran untuk melanjutkan proses pesanan',
-                            style: TextStyle(
-                              color: Colors.amber[700],
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _launchPaymentUrl,
-                  icon: const Icon(Icons.payment, color: Colors.white),
-                  label: const Text('Bayar Sekarang'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryColor,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-            if (canCancel) ...[
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () async {
-                    final confirm = await showDialog<bool>(
-                      context: context,
-                      builder:
-                          (context) => AlertDialog(
-                            title: const Text('Batalkan Pesanan'),
-                            content: const Text(
-                              'Apakah Anda yakin ingin membatalkan pesanan ini?',
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: const Text('Tidak'),
-                              ),
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, true),
-                                child: const Text('Ya'),
-                              ),
-                            ],
-                          ),
-                    );
-                    if (confirm == true) {
-                      await _cancelOrder();
-                    }
-                  },
-                  icon: const Icon(Icons.cancel_outlined, color: Colors.red),
-                  label: const Text('Batalkan Pesanan'),
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Colors.red),
-                    foregroundColor: Colors.red,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ),
-              ),
+              // Payment notification removed
             ],
           ],
         ),
