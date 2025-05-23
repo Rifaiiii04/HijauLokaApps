@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:hijauloka/config/theme.dart';
 import 'package:hijauloka/widgets/app_header.dart';
-import 'package:http/http.dart' as http; // Fixed the quote here
+import 'package:http/http.dart' as http;
 import '../../models/featured_product.dart';
 import 'widgets/welcome_section.dart';
 import 'widgets/categories_section.dart';
@@ -490,8 +490,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const WelcomeSection(),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            child:
-                _buildRecommendedSection(), // Removed const here as it calls a method
+            child: _buildRecommendedSection(),
           ),
           const CategoriesSection(),
           const BlogSection(),

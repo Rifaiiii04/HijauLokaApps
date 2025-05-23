@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hijauloka/config/theme.dart';
+import 'package:hijauloka/screens/categories/category_plants_screen.dart';
 
 class CategoriesSection extends StatelessWidget {
   const CategoriesSection({super.key});
@@ -24,7 +25,15 @@ class CategoriesSection extends StatelessWidget {
                 ),
               ),
               TextButton(
-                onPressed: () {},
+                onPressed: () {
+                  // Navigate to plants category with ID 1 (assuming 1 is for plants)
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const CategoryPlantsScreen(),
+                    ),
+                  );
+                },
                 child: Row(
                   children: const [
                     Text(
@@ -46,9 +55,9 @@ class CategoriesSection extends StatelessWidget {
           ),
           const SizedBox(height: 15),
           // Plants category
-          _buildMainCategory(),
+          _buildMainCategory(context),
           const SizedBox(height: 30),
-          
+
           // Seeds and Pots categories
           _buildSubCategories(),
           const SizedBox(height: 30),
@@ -56,74 +65,85 @@ class CategoriesSection extends StatelessWidget {
       ),
     );
   }
-  
-  Widget _buildMainCategory() {
-    return Container(
-      height: 200,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-        image: const DecorationImage(
-          image: AssetImage('assets/img/plantcategory.png'),
-          fit: BoxFit.cover,
-        ),
-      ),
+
+  Widget _buildMainCategory(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        // Navigate to plants category with ID 1 (assuming 1 is for plants)
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const CategoryPlantsScreen()),
+        );
+      },
       child: Container(
+        height: 200,
         decoration: BoxDecoration(
+          color: Colors.white,
           borderRadius: BorderRadius.circular(15),
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.transparent,
-              Colors.black.withOpacity(0.7),
-            ],
+          image: const DecorationImage(
+            image: AssetImage('assets/img/plantcategory.png'),
+            fit: BoxFit.cover,
           ),
         ),
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Plants',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(15),
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
             ),
-            const SizedBox(height: 5),
-            const Text(
-              'Koleksi tanaman hias indoor & outdoor',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-              ),
-            ),
-            const SizedBox(height: 10),
-            ElevatedButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.arrow_forward, size: 16),
-              label: const Text('Jelajahi'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: AppTheme.primaryColor,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 15,
-                  vertical: 8,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
+          ),
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Plants',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 5),
+              const Text(
+                'Koleksi tanaman hias indoor & outdoor',
+                style: TextStyle(color: Colors.white, fontSize: 14),
+              ),
+              const SizedBox(height: 10),
+              ElevatedButton.icon(
+                onPressed: () {
+                  // Navigate to plants category with ID 1 (assuming 1 is for plants)
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const CategoryPlantsScreen(),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.arrow_forward, size: 16),
+                label: const Text('Jelajahi'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: AppTheme.primaryColor,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 15,
+                    vertical: 8,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
-  
+
   Widget _buildSubCategories() {
     return Row(
       children: [
@@ -143,17 +163,14 @@ class CategoriesSection extends StatelessWidget {
       ],
     );
   }
-  
+
   Widget _buildSubCategory({required String title, required String imagePath}) {
     return Container(
       height: 120,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(15),
-        image: DecorationImage(
-          image: AssetImage(imagePath),
-          fit: BoxFit.cover,
-        ),
+        image: DecorationImage(image: AssetImage(imagePath), fit: BoxFit.cover),
       ),
       child: Container(
         decoration: BoxDecoration(
@@ -161,10 +178,7 @@ class CategoriesSection extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Colors.transparent,
-              Colors.black.withOpacity(0.6),
-            ],
+            colors: [Colors.transparent, Colors.black.withOpacity(0.6)],
           ),
         ),
         padding: const EdgeInsets.all(15),
