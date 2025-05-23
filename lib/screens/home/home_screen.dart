@@ -11,6 +11,7 @@ import 'widgets/cta_section.dart';
 import 'package:hijauloka/models/product.dart';
 import 'package:hijauloka/screens/product/product_detail_screen.dart';
 import 'package:hijauloka/services/auth_service.dart';
+import 'package:hijauloka/utils/currency_formatter.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -170,7 +171,7 @@ class _HomeScreenState extends State<HomeScreen> {
           _buildRatingSection(product),
           const SizedBox(height: 4),
           Text(
-            'Rp${product.harga?.toStringAsFixed(0) ?? '0'}',
+            CurrencyFormatter.format(product.harga ?? 0),
             style: const TextStyle(
               color: AppTheme.primaryColor,
               fontWeight: FontWeight.bold,

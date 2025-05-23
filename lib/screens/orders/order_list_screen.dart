@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:hijauloka/services/order_service.dart';
 import 'package:hijauloka/screens/orders/order_detail_screen.dart';
 import 'package:hijauloka/theme/app_theme.dart';
+import 'package:hijauloka/config/theme.dart';
+import 'package:hijauloka/utils/currency_formatter.dart';
 
 class OrderListScreen extends StatefulWidget {
   final String? initialStatus;
@@ -73,12 +75,13 @@ class _OrderListScreenState extends State<OrderListScreen> {
   void _fetchOrders() async {
     setState(() => _isLoading = true);
     final orderService = OrderService();
-    
+
     try {
       final result = await orderService.getUserOrders(
-        status: _selectedStatus == 'Semua' ? '' : _getStatusValue(_selectedStatus),
+        status:
+            _selectedStatus == 'Semua' ? '' : _getStatusValue(_selectedStatus),
       );
-      
+
       if (result['success'] == true) {
         setState(() {
           _orders = result['data'] ?? [];
@@ -89,7 +92,7 @@ class _OrderListScreenState extends State<OrderListScreen> {
           _orders = [];
           _isLoading = false;
         });
-        
+
         // Show error message
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -105,7 +108,7 @@ class _OrderListScreenState extends State<OrderListScreen> {
         _orders = [];
         _isLoading = false;
       });
-      
+
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -196,34 +199,38 @@ class _OrderListScreenState extends State<OrderListScreen> {
     if (order == null) {
       return const SizedBox.shrink();
     }
-    
+
     print('Order data: ${order.toString()}');
-    
+
     final canCancel = order['can_cancel'] == true;
     final status = order['status']?.toString().toLowerCase() ?? '';
     final statusColor = _getStatusColor(status);
     final statusIcon = _getStatusIcon(status);
-    
+
     // Use order_id from the database
     final orderId = order['order_id']?.toString() ?? '';
-    
+
     print('Order ID extracted: $orderId');
-    
+
     // Format date from tgl_pemesanan
-    final orderDate = order['formatted_date'] ?? order['tgl_pemesanan'] ?? 'Unknown date';
-    
+    final orderDate =
+        order['formatted_date'] ?? order['tgl_pemesanan'] ?? 'Unknown date';
+
     // Get status text
     final statusText = order['status_text'] ?? _getStatusDisplayText(status);
-    
+
     // Map payment status
-    final paymentStatus = order['payment_status'] ?? (order['stts_pembayaran'] == 'lunas' ? 'Lunas' : 'Menunggu');
-    
+    final paymentStatus =
+        order['payment_status'] ??
+        (order['stts_pembayaran'] == 'lunas' ? 'Lunas' : 'Menunggu');
+
     // Safely convert total to double
     double total = 0;
     try {
-      total = order['total_harga'] is num 
-          ? (order['total_harga'] as num).toDouble() 
-          : double.tryParse(order['total_harga']?.toString() ?? '0') ?? 0;
+      total =
+          order['total_harga'] is num
+              ? (order['total_harga'] as num).toDouble()
+              : double.tryParse(order['total_harga']?.toString() ?? '0') ?? 0;
     } catch (e) {
       print('Error parsing total: $e');
     }
@@ -239,7 +246,7 @@ class _OrderListScreenState extends State<OrderListScreen> {
         onTap: () {
           // Add debug print
           print('Navigating to order detail for ID: $orderId');
-          
+
           if (orderId.isEmpty) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
@@ -249,7 +256,7 @@ class _OrderListScreenState extends State<OrderListScreen> {
             );
             return;
           }
-          
+
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -362,7 +369,7 @@ class _OrderListScreenState extends State<OrderListScreen> {
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                   Text(
-                    'Rp${total.toStringAsFixed(0)}',
+                    CurrencyFormatter.format(total),
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,

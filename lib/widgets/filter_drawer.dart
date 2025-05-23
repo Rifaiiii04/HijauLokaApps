@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hijauloka/config/theme.dart';
 import 'package:hijauloka/providers/filter_provider.dart';
+import 'package:hijauloka/utils/currency_formatter.dart';
 import 'package:provider/provider.dart';
 
 class FilterDrawer extends StatelessWidget {
@@ -119,10 +120,7 @@ class FilterDrawer extends StatelessWidget {
                         ),
                         child: const Text(
                           'Reset',
-                          style: TextStyle(
-                            color: Colors.black87,
-                            fontSize: 16,
-                          ),
+                          style: TextStyle(color: Colors.black87, fontSize: 16),
                         ),
                       ),
                     ),
@@ -165,7 +163,10 @@ class FilterDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildPriceRangeSection(BuildContext context, FilterProvider filterProvider) {
+  Widget _buildPriceRangeSection(
+    BuildContext context,
+    FilterProvider filterProvider,
+  ) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -177,9 +178,9 @@ class FilterDrawer extends StatelessWidget {
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: const [
-              Text('Rp0'),
-              Text('Rp1.000.000'),
+            children: [
+              Text(CurrencyFormatter.format(0)),
+              Text(CurrencyFormatter.format(1000000)),
             ],
           ),
           const SizedBox(height: 15),
@@ -217,10 +218,12 @@ class FilterDrawer extends StatelessWidget {
                   onChanged: (value) {
                     final start = int.tryParse(value) ?? 0;
                     if (start <= filterProvider.priceRange.end) {
-                      filterProvider.setPriceRange(RangeValues(
-                        start.toDouble(),
-                        filterProvider.priceRange.end,
-                      ));
+                      filterProvider.setPriceRange(
+                        RangeValues(
+                          start.toDouble(),
+                          filterProvider.priceRange.end,
+                        ),
+                      );
                     }
                   },
                 ),
@@ -246,10 +249,12 @@ class FilterDrawer extends StatelessWidget {
                   onChanged: (value) {
                     final end = int.tryParse(value) ?? 1000000;
                     if (end >= filterProvider.priceRange.start) {
-                      filterProvider.setPriceRange(RangeValues(
-                        filterProvider.priceRange.start,
-                        end.toDouble(),
-                      ));
+                      filterProvider.setPriceRange(
+                        RangeValues(
+                          filterProvider.priceRange.start,
+                          end.toDouble(),
+                        ),
+                      );
                     }
                   },
                 ),
@@ -270,31 +275,35 @@ class FilterDrawer extends StatelessWidget {
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        children: filterProvider.selectedCategories.keys.map((category) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12.0),
-            child: Row(
-              children: [
-                SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: Checkbox(
-                    value: filterProvider.selectedCategories[category],
-                    onChanged: (bool? value) {
-                      filterProvider.toggleCategory(category, value ?? false);
-                    },
-                    activeColor: AppTheme.primaryColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
+        children:
+            filterProvider.selectedCategories.keys.map((category) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12.0),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: Checkbox(
+                        value: filterProvider.selectedCategories[category],
+                        onChanged: (bool? value) {
+                          filterProvider.toggleCategory(
+                            category,
+                            value ?? false,
+                          );
+                        },
+                        activeColor: AppTheme.primaryColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 12),
+                    Text(category, style: const TextStyle(fontSize: 15)),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Text(category, style: const TextStyle(fontSize: 15)),
-              ],
-            ),
-          );
-        }).toList(),
+              );
+            }).toList(),
       ),
     );
   }
@@ -308,51 +317,50 @@ class FilterDrawer extends StatelessWidget {
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        children: [5, 4, 3, 2, 1].map((rating) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12.0),
-            child: Row(
-              children: [
-                SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: Checkbox(
-                    value: filterProvider.selectedRatings[rating],
-                    onChanged: (bool? value) {
-                      filterProvider.toggleRating(rating, value ?? false);
-                    },
-                    activeColor: AppTheme.primaryColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
+        children:
+            [5, 4, 3, 2, 1].map((rating) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12.0),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: Checkbox(
+                        value: filterProvider.selectedRatings[rating],
+                        onChanged: (bool? value) {
+                          filterProvider.toggleRating(rating, value ?? false);
+                        },
+                        activeColor: AppTheme.primaryColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Row(
-                  children: List.generate(
-                    5,
-                    (index) => Icon(
-                      index < rating ? Icons.star : Icons.star_border,
-                      color: Colors.amber,
-                      size: 20,
+                    const SizedBox(width: 12),
+                    Row(
+                      children: List.generate(
+                        5,
+                        (index) => Icon(
+                          index < rating ? Icons.star : Icons.star_border,
+                          color: Colors.amber,
+                          size: 20,
+                        ),
+                      ),
                     ),
-                  ),
+                    if (rating == 5)
+                      const Text(' & Up', style: TextStyle(fontSize: 15)),
+                  ],
                 ),
-                if (rating == 5) const Text(' & Up', style: TextStyle(fontSize: 15)),
-              ],
-            ),
-          );
-        }).toList(),
+              );
+            }).toList(),
       ),
     );
   }
 
   Widget _buildSortBySection(FilterProvider filterProvider) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 20,
-        vertical: 15,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
       decoration: BoxDecoration(
         color: Colors.grey[50],
         borderRadius: BorderRadius.circular(12),
@@ -362,10 +370,7 @@ class FilterDrawer extends StatelessWidget {
           value: filterProvider.sortBy,
           isExpanded: true,
           items: const [
-            DropdownMenuItem(
-              value: 'Popularitas',
-              child: Text('Popularitas'),
-            ),
+            DropdownMenuItem(value: 'Popularitas', child: Text('Popularitas')),
             DropdownMenuItem(
               value: 'Harga Terendah',
               child: Text('Harga Terendah'),

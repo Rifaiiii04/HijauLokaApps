@@ -8,6 +8,8 @@ import 'package:hijauloka/services/auth_service.dart';
 import 'package:hijauloka/screens/checkout/checkout_screen.dart';
 import 'package:hijauloka/services/api_client.dart';
 import 'package:hijauloka/widgets/network_error_dialog.dart';
+import 'package:hijauloka/models/cart_item.dart';
+import 'package:hijauloka/utils/currency_formatter.dart';
 
 class CartItem {
   final int id;
@@ -544,7 +546,7 @@ class _CartScreenState extends State<CartScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Rp${item.productPrice.toStringAsFixed(0)}',
+                    CurrencyFormatter.format(item.productPrice),
                     style: const TextStyle(
                       color: AppTheme.primaryColor,
                       fontWeight: FontWeight.bold,
@@ -626,9 +628,10 @@ class _CartScreenState extends State<CartScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.grey.withOpacity(0.1),
             blurRadius: 10,
             offset: const Offset(0, -5),
           ),
@@ -650,7 +653,7 @@ class _CartScreenState extends State<CartScreen> {
                 style: TextStyle(color: Colors.grey[600]),
               ),
               Text(
-                'Rp${_selectedTotalPrice.toStringAsFixed(0)}',
+                CurrencyFormatter.format(_selectedTotalPrice),
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ],
@@ -663,9 +666,9 @@ class _CartScreenState extends State<CartScreen> {
                 'Biaya Pengiriman',
                 style: TextStyle(color: Colors.grey[600]),
               ),
-              const Text(
-                'Rp15,000',
-                style: TextStyle(fontWeight: FontWeight.bold),
+              Text(
+                CurrencyFormatter.format(15000),
+                style: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -678,7 +681,7 @@ class _CartScreenState extends State<CartScreen> {
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               Text(
-                'Rp${(_selectedTotalPrice + 15000).toStringAsFixed(0)}',
+                CurrencyFormatter.format(_selectedTotalPrice + 15000),
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,

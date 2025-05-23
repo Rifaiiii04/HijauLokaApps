@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:hijauloka/config/theme.dart';
 import 'package:hijauloka/models/product.dart'; // Add this import
 import 'package:hijauloka/services/auth_service.dart'; // Add this import for AuthService
+import 'package:hijauloka/utils/currency_formatter.dart';
 
 class ProductDetail {
   final int id;
@@ -346,7 +347,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
                 // Price
                 Text(
-                  'Rp${product['harga'] ?? '0'}',
+                  CurrencyFormatter.format(
+                    double.parse(product['harga']?.toString() ?? '0'),
+                  ),
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,

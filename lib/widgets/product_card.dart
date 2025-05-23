@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:hijauloka/config/theme.dart';
+import 'package:hijauloka/utils/currency_formatter.dart';
 
 class ProductCard extends StatelessWidget {
   final String name;
-  final String price;
+  final double price;
   final String imageUrl;
   final double rating;
   final String category;
@@ -109,43 +110,54 @@ class ProductCard extends StatelessWidget {
               ),
               // Product details
               const SizedBox(height: 10), // Increased from 8 to 10
-              Text(
-                name,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 4), // Increased from 2 to 4
-              Row(
-                children: [
-                  ...List.generate(
-                    5,
-                    (index) => Icon(
-                      Icons.star,
-                      color:
-                          index < rating.floor()
-                              ? Colors.amber
-                              : Colors.amber.withOpacity(0.3),
-                      size: 12,
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                  const SizedBox(width: 2),
-                  Text(
-                    '(${rating.toStringAsFixed(1)})',
-                    style: TextStyle(color: Colors.grey[600], fontSize: 9),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 2),
-              Text(
-                price,
-                style: const TextStyle(
-                  color: AppTheme.primaryColor,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        ...List.generate(
+                          5,
+                          (index) => Icon(
+                            Icons.star,
+                            color:
+                                index < rating.floor()
+                                    ? Colors.amber
+                                    : Colors.amber.withOpacity(0.3),
+                            size: 12,
+                          ),
+                        ),
+                        const SizedBox(width: 2),
+                        Text(
+                          '(${rating.toStringAsFixed(1)})',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 9,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      CurrencyFormatter.format(price),
+                      style: const TextStyle(
+                        color: AppTheme.primaryColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const Spacer(),

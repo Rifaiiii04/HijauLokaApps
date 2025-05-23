@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:hijauloka/models/order.dart';
 import 'package:hijauloka/models/cart_item.dart';
 import 'package:hijauloka/services/order_service.dart';
+import 'package:hijauloka/utils/currency_formatter.dart';
 
 class OrderDetailScreen extends StatefulWidget {
   final String orderId;
@@ -501,7 +502,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                   Text(
-                    'Rp${_order!.total.toStringAsFixed(0)}',
+                    CurrencyFormatter.format(_order!.total),
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
@@ -599,7 +600,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Silakan siapkan uang tunai sebesar Rp ${_order!.total.toStringAsFixed(0)} untuk dibayarkan kepada kurir ketika pesanan tiba.',
+                        'Silakan siapkan uang tunai sebesar ${CurrencyFormatter.format(_order!.total)} untuk dibayarkan kepada kurir ketika pesanan tiba.',
                         style: TextStyle(color: Colors.blue[700], fontSize: 13),
                       ),
                     ),
@@ -670,11 +671,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Rp ${item.productPrice.toStringAsFixed(0)} x ${item.quantity}',
+                      '${CurrencyFormatter.format(item.productPrice)} x ${item.quantity}',
                       style: TextStyle(color: Colors.grey[600], fontSize: 13),
                     ),
                     Text(
-                      'Rp ${(item.productPrice * item.quantity).toStringAsFixed(0)}',
+                      CurrencyFormatter.format(
+                        item.productPrice * item.quantity,
+                      ),
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         color: AppTheme.primaryColor,
@@ -704,7 +707,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             ),
           ),
           Text(
-            'Rp ${amount.toStringAsFixed(0)}',
+            CurrencyFormatter.format(amount),
             style: TextStyle(
               fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
               fontSize: isTotal ? 16 : 14,

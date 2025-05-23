@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 import 'package:hijauloka/services/auth_service.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:hijauloka/utils/currency_formatter.dart';
 
 class CategoryScreen extends StatefulWidget {
   const CategoryScreen({super.key});
@@ -351,8 +352,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
                                     final product = _filteredProducts[index];
                                     return ProductCard(
                                       name: product.name,
-                                      price:
-                                          'Rp${product.price.toStringAsFixed(0)}',
+                                      price: product.price,
                                       imageUrl: ProductService.getFullImageUrl(
                                         product.image,
                                       ),

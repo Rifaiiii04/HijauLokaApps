@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hijauloka/config/theme.dart';
+import 'package:hijauloka/utils/currency_formatter.dart';
 
 class ShippingMethodSection extends StatelessWidget {
   final String selectedShippingMethod;
@@ -21,10 +22,7 @@ class ShippingMethodSection extends StatelessWidget {
         children: [
           const Text(
             'Metode Pengiriman',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           _buildShippingMethodCard(
@@ -67,18 +65,20 @@ class ShippingMethodSection extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
         side: BorderSide(
-          color: selectedShippingMethod == value && isEnabled
-              ? AppTheme.primaryColor
-              : Colors.grey[300]!,
+          color:
+              selectedShippingMethod == value && isEnabled
+                  ? AppTheme.primaryColor
+                  : Colors.grey[300]!,
           width: selectedShippingMethod == value && isEnabled ? 2 : 1,
         ),
       ),
       child: InkWell(
-        onTap: isEnabled
-            ? () {
-                onShippingMethodSelected(value, cost);
-              }
-            : null,
+        onTap:
+            isEnabled
+                ? () {
+                  onShippingMethodSelected(value, cost);
+                }
+                : null,
         borderRadius: BorderRadius.circular(8),
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -87,13 +87,14 @@ class ShippingMethodSection extends StatelessWidget {
               Radio<String>(
                 value: value,
                 groupValue: selectedShippingMethod,
-                onChanged: isEnabled
-                    ? (newValue) {
-                        if (newValue != null) {
-                          onShippingMethodSelected(newValue, cost);
+                onChanged:
+                    isEnabled
+                        ? (newValue) {
+                          if (newValue != null) {
+                            onShippingMethodSelected(newValue, cost);
+                          }
                         }
-                      }
-                    : null,
+                        : null,
                 activeColor: AppTheme.primaryColor,
               ),
               const SizedBox(width: 8),
@@ -120,7 +121,7 @@ class ShippingMethodSection extends StatelessWidget {
                 ),
               ),
               Text(
-                'Rp ${cost.toStringAsFixed(0)}',
+                CurrencyFormatter.format(cost),
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   color: isEnabled ? AppTheme.primaryColor : Colors.grey,

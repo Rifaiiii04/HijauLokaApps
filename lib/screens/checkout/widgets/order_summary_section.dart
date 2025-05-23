@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hijauloka/config/theme.dart';
 import 'package:hijauloka/models/cart_item.dart';
+import 'package:hijauloka/utils/currency_formatter.dart';
 
 class OrderSummarySection extends StatelessWidget {
   final List<CartItem> cartItems;
@@ -24,10 +25,7 @@ class OrderSummarySection extends StatelessWidget {
         children: [
           const Text(
             'Ringkasan Pesanan',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           ...cartItems.map((item) => _buildOrderItemRow(item)),
@@ -59,12 +57,16 @@ class OrderSummarySection extends StatelessWidget {
               width: 60,
               height: 60,
               fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Container(
-                width: 60,
-                height: 60,
-                color: Colors.grey[200],
-                child: const Icon(Icons.image_not_supported, color: Colors.grey),
-              ),
+              errorBuilder:
+                  (context, error, stackTrace) => Container(
+                    width: 60,
+                    height: 60,
+                    color: Colors.grey[200],
+                    child: const Icon(
+                      Icons.image_not_supported,
+                      color: Colors.grey,
+                    ),
+                  ),
             ),
           ),
           const SizedBox(width: 12),
@@ -74,36 +76,33 @@ class OrderSummarySection extends StatelessWidget {
               children: [
                 Text(
                   item.productName,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Rp ${item.productPrice.toStringAsFixed(0)} x ${item.quantity}',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 12,
-                  ),
+                  '${CurrencyFormatter.format(item.productPrice)} x ${item.quantity}',
+                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
                 ),
               ],
             ),
           ),
           const SizedBox(width: 8),
           Text(
-            'Rp ${(item.productPrice * item.quantity).toStringAsFixed(0)}',
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-            ),
+            CurrencyFormatter.format(item.productPrice * item.quantity),
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildPriceSummaryRow(String label, double amount, {bool isTotal = false}) {
+  Widget _buildPriceSummaryRow(
+    String label,
+    double amount, {
+    bool isTotal = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -117,7 +116,7 @@ class OrderSummarySection extends StatelessWidget {
             ),
           ),
           Text(
-            'Rp ${amount.toStringAsFixed(0)}',
+            CurrencyFormatter.format(amount),
             style: TextStyle(
               fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
               fontSize: isTotal ? 16 : 14,
