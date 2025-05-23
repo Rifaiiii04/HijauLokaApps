@@ -1,96 +1,141 @@
 <?php
 header('Content-Type: application/json; charset=utf-8');
+// header('Access-Control-Allow-Origin: *');
+// header('Access-Control-Allow-Methods: GET');
 
-// Database connection
-$host = "103.247.11.220";
-$db_name = "hijc7862_hijauloka";
-$username = "hijc7862_admin";
-$password = "wyn[=?alPV%.";
+// Set UTF-8 encoding for database connection
+ini_set('default_charset', 'UTF-8');
 
-// Create connection
-$conn = new mysqli($host, $username, $password, $db_name);
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
-// Check connection
-if ($conn->connect_error) {
-    http_response_code(500);
-    echo json_encode([
-        'success' => false, 
-        'message' => 'Database connection failed: ' . $conn->connect_error
-    ]);
+// Database configuration
+$host = '103.247.11.220';
+$dbname = 'hijc7862_hijauloka';
+$username = 'hijc7862_admin';
+$password = 'wyn[=?alPV%.';
+
+// Check if category ID is provided
+$categoryId = isset($_GET['category_id']) ? intval($_GET['category_id']) : 0;
+
+if ($categoryId <= 0) {
+    $response = array(
+        'success' => false,
+        'message' => 'Invalid category ID',
+        'data' => null
+    );
+    echo json_encode($response);
     exit;
 }
 
-try {
-    // Get category ID from query parameter
-    $category_id = isset($_GET['category_id']) ? intval($_GET['category_id']) : 0;
-
-    if ($category_id <= 0) {
-        throw new Exception('Invalid category ID');
+// Helper function to convert all strings to UTF-8
+function utf8ize($mixed) {
+    if (is_array($mixed)) {
+        foreach ($mixed as $key => $value) {
+            $mixed[$key] = utf8ize($value);
+        }
+    } else if (is_string($mixed)) {
+        return mb_convert_encoding($mixed, 'UTF-8', 'UTF-8');
     }
-
-    // Prepare and execute the query
-    $query = "SELECT p.*, c.nama_kategori as category_name 
-              FROM product p 
-              INNER JOIN product_category pc ON p.id_product = pc.id_product 
-              INNER JOIN category c ON pc.id_kategori = c.id_kategori 
-              WHERE c.id_kategori = ? 
-              ORDER BY p.id_product DESC";
-              
-    $stmt = $conn->prepare($query);
-    if (!$stmt) {
-        throw new Exception('Query preparation failed: ' . $conn->error);
-    }
-
-    $stmt->bind_param("i", $category_id);
-    if (!$stmt->execute()) {
-        throw new Exception('Query execution failed: ' . $stmt->error);
-    }
-
-    $result = $stmt->get_result();
-    if (!$result) {
-        throw new Exception('Failed to get result: ' . $stmt->error);
-    }
-
-    $products = array();
-    while ($row = $result->fetch_assoc()) {
-        // Format the product data
-        $product = array(
-            'id' => $row['id_product'],
-            'name' => $row['nama_product'],
-            'description' => $row['desk_product'],
-            'price' => floatval($row['harga']),
-            'stock' => intval($row['stok']),
-            'image' => $row['gambar'],
-            'category_id' => $row['id_kategori'],
-            'category' => $row['category_name'],
-            'rating' => floatval($row['rating'] ?? 0),
-            'created_at' => $row['created_at'] ?? null,
-            'updated_at' => $row['updated_at'] ?? null
-        );
-        $products[] = $product;
-    }
-
-    // Return success response
-    echo json_encode([
-        'success' => true,
-        'data' => $products,
-        'message' => 'Products retrieved successfully'
-    ]);
-
-} catch (Exception $e) {
-    // Return error response
-    http_response_code(400);
-    echo json_encode([
-        'success' => false,
-        'message' => $e->getMessage()
-    ]);
-} finally {
-    // Close the database connection
-    if (isset($stmt)) {
-        $stmt->close();
-    }
-    if (isset($conn)) {
-        $conn->close();
-    }
+    return $mixed;
 }
-?> 
+
+try {
+    // Create database connection
+    $conn = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
+    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+    // Force connection to use UTF-8
+    $conn->exec("SET NAMES 'utf8mb4'");
+
+    error_log("Database connection successful");
+    error_log("Fetching products for category ID: " . $categoryId);
+
+    // Fetch data for specific category
+    $stmt = $conn->prepare("
+        SELECT 
+            p.id_product,
+            p.nama_product,
+            p.desk_product,
+            p.harga,
+            p.stok,
+            p.gambar,
+            p.rating,
+            c.nama_kategori,
+            p.id_kategori
+        FROM product p
+        LEFT JOIN category c ON p.id_kategori = c.id_kategori
+        WHERE p.id_kategori = :categoryId
+        ORDER BY p.id_product DESC
+    ");
+    $stmt->bindParam(':categoryId', $categoryId, PDO::PARAM_INT);
+    $stmt->execute();
+    $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    error_log("Number of products fetched for category $categoryId: " . count($products));
+
+    $base_img_url = "https://admin.hijauloka.my.id/uploads/";
+
+    // Map and format data
+    $formattedProducts = array_map(function($product) use ($base_img_url) {
+        $gambar = $product['gambar'];
+        if ($gambar && strpos($gambar, ',') !== false) {
+            $gambar = explode(',', $gambar)[0];
+        }
+        $gambar = $gambar ? trim($gambar) : '';
+
+        return array(
+            'id' => $product['id_product'],
+            'name' => $product['nama_product'],
+            'description' => $product['desk_product'],
+            'price' => floatval($product['harga']),
+            'stock' => intval($product['stok']),
+            'image' => $gambar,
+            'rating' => floatval($product['rating'] ?? 0),
+            'category' => $product['nama_kategori'] ?? 'Uncategorized',
+            'category_id' => $product['id_kategori']
+        );
+    }, $products);
+
+    // Convert to UTF-8-safe
+    $utf8Products = utf8ize($formattedProducts);
+
+    // Build final response
+    $response = array(
+        'success' => true,
+        'data' => $utf8Products
+    );
+
+    $json_output = json_encode($response, JSON_PRETTY_PRINT);
+
+    if ($json_output === false) {
+        error_log("JSON encode error: " . json_last_error_msg());
+        throw new Exception("Failed to encode JSON: " . json_last_error_msg());
+    }
+
+    echo $json_output;
+    exit;
+
+} catch(PDOException $e) {
+    error_log("Database Error: " . $e->getMessage());
+    $response = array(
+        'success' => false,
+        'message' => 'Database error: ' . $e->getMessage(),
+        'data' => null
+    );
+    http_response_code(500);
+    echo json_encode($response);
+    exit;
+} catch(Exception $e) {
+    error_log("General Error: " . $e->getMessage());
+    $response = array(
+        'success' => false,
+        'message' => 'General error: ' . $e->getMessage(),
+        'data' => null
+    );
+    http_response_code(500);
+    echo json_encode($response);
+    exit;
+}
+?>

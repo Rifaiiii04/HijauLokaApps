@@ -3,6 +3,7 @@ import 'package:hijauloka/config/theme.dart';
 import 'package:hijauloka/models/category.dart';
 import 'package:hijauloka/services/category_service.dart';
 import 'package:hijauloka/widgets/app_header.dart';
+import 'package:hijauloka/screens/product/product_by_category_screen.dart';
 
 class CategoryPlantsScreen extends StatefulWidget {
   const CategoryPlantsScreen({Key? key}) : super(key: key);
@@ -114,30 +115,44 @@ class _CategoryPlantsScreenState extends State<CategoryPlantsScreen> {
                   itemCount: _categories.length,
                   itemBuilder: (context, index) {
                     final category = _categories[index];
-                    return Card(
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        side: BorderSide(color: Colors.grey[200]!),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            Icons.eco_outlined,
-                            color: AppTheme.primaryColor,
-                            size: 48,
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) => ProductByCategoryScreen(
+                                  categoryId: category.id,
+                                  categoryName: category.name,
+                                ),
                           ),
-                          const SizedBox(height: 16),
-                          Text(
-                            category.name,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
+                        );
+                      },
+                      child: Card(
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(color: Colors.grey[200]!),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.eco_outlined,
+                              color: AppTheme.primaryColor,
+                              size: 48,
                             ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
+                            const SizedBox(height: 16),
+                            Text(
+                              category.name,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
                       ),
                     );
                   },

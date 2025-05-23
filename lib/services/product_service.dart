@@ -77,20 +77,55 @@ class ProductService {
 
   Future<Map<String, dynamic>> getProductsByCategory(int categoryId) async {
     try {
+      print('Fetching products by category from: $baseUrl/get_products_by_category.php?category_id=$categoryId');
+      
       final response = await http.get(
-        Uri.parse(
-          '$baseUrl/get_products_by_category.php?category_id=$categoryId',
-        ),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept-Charset': 'utf-8',
-        },
-      );
+        Uri.parse('$baseUrl/get_products_by_category.php?category_id=$categoryId'),
+        headers: {'Accept-Charset': 'utf-8'},
+      ).timeout(const Duration(seconds: 15));
 
-      final result = json.decode(response.body);
-      return result;
+      print('Response status code: ${response.statusCode}');
+      
+      if (response.statusCode == 200) {
+        if (response.body.isEmpty) {
+          return {
+            'success': false,
+            'message': 'Empty response from server',
+            'data': []
+          };
+        }
+        
+        try {
+          // Try to fix malformed UTF-8 characters
+          String cleanedResponse = utf8.decode(
+            response.bodyBytes,
+            allowMalformed: true,
+          );
+
+          final jsonData = json.decode(cleanedResponse);
+          return jsonData;
+        } catch (jsonError) {
+          print('JSON parsing error: $jsonError');
+          return {
+            'success': false,
+            'message': 'Error parsing response: $jsonError',
+            'data': []
+          };
+        }
+      } else {
+        return {
+          'success': false,
+          'message': 'Failed to load products. Status code: ${response.statusCode}',
+          'data': []
+        };
+      }
     } catch (e) {
-      return {'success': false, 'message': 'Error: $e'};
+      print('Error fetching products by category: $e');
+      return {
+        'success': false,
+        'message': 'Error: $e',
+        'data': []
+      };
     }
   }
 }

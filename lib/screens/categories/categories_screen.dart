@@ -4,6 +4,7 @@ import 'package:hijauloka/models/category.dart';
 import 'package:hijauloka/services/category_service.dart';
 import 'package:hijauloka/widgets/app_header.dart';
 import 'package:hijauloka/screens/categories/category_plants_screen.dart';
+import 'package:hijauloka/screens/product/product_by_category_screen.dart';
 
 class CategoriesScreen extends StatefulWidget {
   const CategoriesScreen({Key? key}) : super(key: key);
@@ -134,7 +135,13 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const CategoryPlantsScreen()),
+          MaterialPageRoute(
+            builder:
+                (context) => ProductByCategoryScreen(
+                  categoryId: category.id,
+                  categoryName: category.name,
+                ),
+          ),
         );
       },
       child: Card(
